@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { store } from "../store/states";
-import { FiCheckCircle, FiShield, FiUser, FiCpu } from "react-icons/fi";
+import { FiShield, FiUser, FiCpu } from "react-icons/fi";
 
 const Home = () => {
   const { user } = store();
@@ -10,12 +10,14 @@ const Home = () => {
       <Navbar />
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         {/* Hero Section */}
-        <div className="rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 p-8 sm:p-12 text-white shadow-xl">
+        <div className="rounded-3xl bg-linear-to-r from-blue-600 to-indigo-700 p-8 sm:p-12 text-white shadow-xl">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             Welcome back, {user?.firstname} {user?.lastname}! 👋
           </h1>
           <p className="mt-4 text-blue-100 max-w-2xl text-base sm:text-lg">
-            You are successfully logged in to the MERN Starter Template. This repository comes pre-configured with secure JWT authentication, Cloudinary avatar uploads, password management, and Tailwind CSS.
+            You are successfully logged in to the MERN Starter Template. This repository comes
+            pre-configured with secure JWT authentication, Cloudinary avatar uploads, password
+            management, and Tailwind CSS.
           </p>
         </div>
 
@@ -37,7 +39,8 @@ const Home = () => {
             </div>
             <h2 className="text-lg font-bold text-gray-900">Profile & Avatars</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Manage user profile details, update usernames, and upload avatars directly to Cloudinary.
+              Manage user profile details, update usernames, and upload avatars directly to
+              Cloudinary.
             </p>
           </div>
 

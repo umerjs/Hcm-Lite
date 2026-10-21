@@ -1,366 +1,369 @@
-# AGENTS.md — 12-Hour Hackathon Execution Rules
+# AGENTS.md — Secure, Fast App Development Playbook
 
-## 1. Mission
+## Mission
 
-Build the assigned application as quickly as possible while maintaining visual accuracy, functional completeness, data integrity, and reliable execution.
+Deliver the smallest complete, polished, secure, and maintainable application that satisfies the task. Move quickly by understanding the existing code first, reusing established patterns, implementing the highest-value workflow end to end, and verifying changes instead of guessing.
 
-**Primary objective:** Deliver a complete, polished, responsive application that closely matches the supplied reference designs and satisfies all task requirements.
+**Order of priorities:**
 
-Priorities:
-1. Correct interpretation of the assignment.
-2. Pixel-accurate UI.
-3. Working end-to-end functionality.
-4. Persistent MongoDB data storage.
-5. Responsive design and accessibility.
-6. Fast testing and reliable delivery.
+1. Meet explicit task and acceptance requirements.
 
-A feature is not complete until its behavior has been verified.
+1. Preserve a runnable, coherent application and existing user work.
 
-## 2. Mandatory Rules
+1. Implement correct end-to-end behavior and persistent data handling.
 
-- Read this file before implementing changes.
-- Inspect the existing repository, dependencies, scripts, and architecture first.
-- Preserve the existing stack, working code, naming conventions, and project structure.
-- Follow the task requirements and reference designs as the source of truth.
-- Prefer focused changes over unnecessary rewrites.
-- Do not add unrequested features unless essential.
-- Reuse existing dependencies and components wherever practical.
-- Never claim that code, tests, database operations, or features work without verification.
-- Do not delete files or discard existing work without a clear reason.
-- Keep the application runnable throughout implementation.
-- **MongoDB is the persistent database for application data.**
-- Do not substitute browser storage, caches, or cookies for MongoDB persistence.
-- Do not sacrifice data integrity or security to save implementation time.
+1. Protect users, APIs, and data; validate all untrusted input.
 
-## 3. Initial Project Inspection
+1. Match the supplied design and support required screen sizes/accessibility.
 
-Before coding:
+1. Verify the result and clearly report remaining limitations.
 
-1. Read `package.json` and identify the package manager and scripts.
-2. Inspect the application entry points and folder structure.
-3. Confirm whether the project uses React with Vite, Next.js, or another framework.
-4. Identify the existing API architecture and MongoDB integration.
-5. Inspect existing models, schemas, routes, controllers, middleware, and database configuration.
-6. Identify authentication, authorization, validation, and error-handling patterns.
-7. Locate available assets, fonts, components, and reference designs.
-8. Run the existing application if possible.
-
-Do not assume a particular framework or library without inspecting the repository.
+A feature is not complete merely because it renders. It is complete when its important success, empty, invalid, loading, and failure states behave correctly.
 
-Do not recreate the project or replace its configuration unnecessarily.
+## 1. Operating Rules
 
-## 4. Task Analysis
+- Read this file and inspect the repository before changing code.
 
-Convert the assignment into a concise checklist containing:
+- Treat the task, existing source, tests, and runtime behavior as authoritative. Do not invent capabilities or claim unverified success.
 
-- Required pages and routes.
-- Required UI sections and layouts.
-- Required interactions and user flows.
-- Data entities and relationships.
-- Required MongoDB persistence operations.
-- Authentication and authorization requirements.
-- Validation and error states.
-- Responsive requirements.
-- Available screenshots, assets, and design references.
+- Preserve the current architecture, dependencies, naming, conventions, and working behavior unless a change is necessary and justified.
 
-Prioritize the evaluator's explicit requirements.
+- Prefer the smallest end-to-end implementation over broad rewrites, speculative abstractions, or unrequested features.
 
-If an essential requirement is ambiguous and different interpretations would significantly change the implementation, ask one concise clarification. Otherwise, make a reasonable decision based on the available evidence and proceed.
+- Keep the app runnable; make focused changes and verify each meaningful slice.
 
-## 5. Pixel-Perfect UI Rules
+- Reuse existing components, validation utilities, API clients, middleware, and data-access patterns where appropriate.
 
-Visual fidelity is a core requirement.
+- Never weaken validation, tests, access controls, or error handling merely to make a check pass.
 
-Match the supplied reference as closely as practical:
+- Do not delete files, discard user changes, or change deployment/configuration behavior without a clear task-related reason.
 
-- Page structure, container widths, and alignment.
-- Section heights, spacing, margins, padding, and gaps.
-- Typography, font weights, line heights, and text wrapping.
-- Colors, gradients, borders, shadows, and corner radii.
-- Image selection, aspect ratios, crops, and positioning.
-- Navigation, headers, sidebars, cards, tables, and footers.
-- Button dimensions, icon placement, and interactive states.
-- Responsive layouts at the required viewport sizes.
+- Do not expose secrets, credentials, private user data, or internal stack traces in client code, API responses, logs, screenshots, or commits.
 
-### Visual workflow
+- When a requirement is ambiguous, make a reasonable reversible choice and proceed. Ask only when different interpretations would materially alter the result or risk data/security.
 
-1. Inspect the reference before implementation.
-2. Establish the main layout and page proportions.
-3. Match typography, spacing, and visual hierarchy.
-4. Use appropriate assets and icons.
-5. Implement the required functionality.
-6. Run the application and capture screenshots when possible.
-7. Compare the rendered output against the reference.
-8. Fix the largest visual differences first.
-9. Repeat until the main discrepancies are resolved.
+## 2. Fast, Low-Risk Workflow
 
-Do not claim pixel-perfect accuracy without visual verification.
+### Before editing
 
-Do not replace supplied assets with unrelated images or emoji when appropriate assets are available.
+1. Read `package.json`, lockfile, scripts, and relevant project instructions.
 
-Avoid contradictory CSS overrides and unnecessary styling rewrites.
+1. Inspect the file tree and the exact pages, components, APIs, models, and tests involved.
 
-## 6. Design System and Styling
+1. Check `git status` and preserve existing edits.
 
-- Follow the existing styling framework and conventions.
-- Reuse design tokens, CSS variables, utility classes, and components.
-- Keep typography, spacing, colors, and component dimensions consistent.
-- Build reusable components when multiple pages need the same UI.
-- Keep components focused and maintainable.
-- Avoid excessive abstractions for one-off elements.
-- Do not redesign away from the supplied reference.
-- Verify the installed Tailwind version before changing configuration or syntax.
+1. Identify framework, package manager, runtime, data store, authentication, styling system, and current conventions; do not assume them.
 
-## 7. MongoDB — Mandatory Data Persistence
+1. Translate the request into a short checklist of user flows, UI states, API operations, data changes, security concerns, and acceptance criteria.
 
-**MongoDB must be the source of truth for persistent application data.**
+1. Run or inspect the app if practical; note existing failures before attributing them to new changes.
 
-All applicable application data must be persisted in MongoDB through the application's backend.
+### During implementation
 
-Examples include, when required by the assignment:
+- Trace a feature through its full path: UI → request → route/middleware → validation/authorization → service/data layer → response → UI state.
 
-- User accounts and profiles.
-- Products, posts, and categories.
-- Orders, payments metadata, and transactions metadata.
-- Form submissions and business records.
-- Comments, messages, and other user-generated content.
-- Application settings and other persistent entities.
+- Work in small, coherent changes. Prefer editing the existing implementation over building a parallel one.
 
-Do not assume every example is required. Implement the data models and operations that the assignment actually needs.
+- Keep business rules in the appropriate server/domain layer, not only in React components.
 
-### Required database behavior
+- Avoid unnecessary dependencies. If a dependency is needed, use the project's package manager and preserve the lockfile.
 
-- Inspect and reuse the existing MongoDB connection and data-access patterns.
-- Use the existing Mongoose models or established MongoDB driver integration where available.
-- Create appropriate schemas, field types, validation rules, and indexes when needed.
-- Use server-side database operations for creating, reading, updating, and deleting records.
-- Ensure successful writes persist after a page reload, browser restart, or new authenticated session.
-- Return appropriate responses when database operations succeed or fail.
-- Handle missing records, duplicate records, invalid input, and connection failures.
-- Use environment variables for database connection strings and credentials.
-- Keep database credentials and privileged operations on the server.
-- Validate incoming data on the server; never trust client-side validation alone.
-- Apply authentication and authorization checks to protected operations.
-- Avoid unnecessary queries and excessively broad database reads.
-- Use appropriate pagination for large collections when required.
-- Do not expose passwords, private tokens, or sensitive internal fields in API responses.
-- Never return a successful response before the relevant database operation has actually succeeded.
+- Avoid repeated expensive work, broad data fetching, and duplicate API calls. Use pagination and targeted queries for growing datasets.
 
-### Prohibited substitutes for persistent storage
+- Do not use mock data as if it were live or saved. If a service is unavailable, show the limitation honestly.
 
-Do not use any of the following as the primary or alternative persistent store for application business data:
+### Before delivery
 
-- `localStorage`
-- `sessionStorage`
-- IndexedDB
-- Cookies
-- Browser memory as a substitute for database persistence
-- Hardcoded arrays or mock objects presented as saved records
-- Static JSON files used as a replacement for required database writes
+- Review the diff for unrelated changes, accidental secrets, unsafe defaults, and missing error states.
 
-In-memory variables may be used for temporary UI state, calculations, or non-persistent processing. They must not replace MongoDB for persistent records.
+- Run the most relevant available lint, type-check, build, and tests; start the app and exercise critical paths when possible.
 
-Browser caching is acceptable for static assets and appropriate read-performance optimizations, but cached content must not replace the database as the source of truth.
+- Report what changed, what checks ran, and what remains unverified. Never state that a command or flow passed unless it actually did.
 
-### Authentication distinction
+## 3. Security Baseline — Apply by Default
 
-Cookies may be used for secure session identifiers or authentication tokens when appropriate. They are not a database for application records.
+Treat every value from a browser, URL, file, webhook, third-party API, database record, or environment boundary as untrusted until checked. Frontend checks improve usability; **the server is the security boundary**.
 
-If authentication is required, use the existing authentication architecture or implement a suitable server-side session/token flow. Use secure cookie attributes where applicable, and enforce authorization on the server.
+### API route inventory and access control
 
-Do not store passwords or sensitive credentials in browser storage.
+For every route, establish and enforce:
 
-### When internet or MongoDB is unavailable
+- Intended caller: public, authenticated user, or specific privileged role.
 
-- Never pretend a database write succeeded when it failed.
-- Do not silently queue business-data writes in browser storage.
-- Do not switch automatically to mock data or a different database.
-- Display a clear, user-friendly error when the database is unavailable.
-- Preserve the user's ability to retry the operation without creating unintended duplicate records.
-- Keep the application interface usable where possible, while clearly distinguishing unavailable data from saved data.
-- Do not repeatedly retry failing database operations without a sensible limit.
-- Use local MongoDB only if it is explicitly configured and available in the project environment.
+- Allowed HTTP method, accepted content type, expected schema, and response shape.
 
-If the database is hosted remotely, a working internet connection is required for remote database operations.
+- Authentication before protected work; authorization for the requested action and specific resource.
 
-## 8. React and MERN Guidelines
+- Ownership/tenant checks on every read, update, and delete. A valid ID is not proof that the caller may access the record (prevent IDOR/BOLA).
 
-Follow the existing project architecture.
+- Least privilege: users can access only the records and fields needed for their task. Never trust a client-supplied `userId`, role, owner, price, status, permission, or tenant identifier as authoritative.
 
-### React
+- Consistent, appropriate HTTP status codes and safe error messages.
 
-- Use functional components and hooks consistently with the existing codebase.
-- Keep state as local as practical.
-- Avoid duplicated state and unnecessary re-renders.
-- Use stable keys for rendered lists.
-- Handle loading, empty, success, and error states.
-- Clean up event listeners and asynchronous effects where necessary.
-- Do not use browser storage to bypass missing backend functionality.
+Do not rely on hidden buttons or client-side route guards for access control. Enforce permissions in server middleware/service logic on every request.
 
-### Express and API
+### Request validation and data integrity
 
-- Keep API routes, controllers, validation, and business logic organized according to the existing structure.
-- Validate incoming data on the server.
-- Handle asynchronous errors correctly.
-- Use suitable HTTP methods and status codes.
-- Avoid exposing internal exceptions or database details to end users.
-- Protect sensitive routes and enforce permissions server-side.
-- Avoid introducing a new backend architecture unless the task requires it.
+- Validate at the API boundary using the project's established schema-validation approach, if available.
 
-### Database integration
+- Allowlist accepted fields; reject or safely ignore unexpected fields. Do not pass `req.body` directly into database create/update calls or spread it into privileged objects.
 
-For a typical MERN application, the data flow should be:
+- Check type, presence, format, range, length, allowed enum values, and cross-field rules. Normalize only where the field's meaning permits it.
 
-React UI → HTTP request → Express API → validation and authorization → MongoDB → API response → React UI.
+- Convert expected validation failures into clear field-level errors and a 4xx response. Do not turn malformed input into a 500.
 
-Follow this pattern unless the existing project has a justified alternative architecture.
+- Validate route parameters, query parameters, headers used for decisions, and uploaded files as well as JSON bodies.
 
-For data mutations, update the UI based on the confirmed API result. If optimistic updates are necessary, implement appropriate rollback behavior when the operation fails.
+- Protect against mass assignment and NoSQL/operator injection. Construct database filters from validated values; never accept raw client query operators or unrestricted filter/sort objects.
 
-## 9. Forms and Interactions
+- Use atomic/conditional updates or transactions where necessary to maintain invariants and avoid race conditions.
 
-Every visible interactive element must have a meaningful behavior.
+- Enforce uniqueness and referential/business rules at the data layer as well as in the UI when applicable.
 
-Verify:
+### Authentication, sessions, and browser protections
 
-- Navigation links lead to the correct routes.
-- Buttons trigger their intended actions.
-- Forms validate inputs and show useful feedback.
-- Create, edit, and delete operations use the backend when required.
-- Newly created or edited records remain available after reloading the page.
-- Search and filtering operate on the intended data.
-- Dialogs, menus, tabs, and dropdowns behave correctly.
-- Loading, empty, success, and error states are handled appropriately.
-- Failed requests do not display false success messages.
-- Repeated submissions do not accidentally create duplicate records.
-- Important controls support keyboard interaction where appropriate.
+- Reuse the existing, maintained authentication architecture; do not invent a home-grown password or token system.
 
-Do not create fake interactions just to make a screenshot look complete.
+- Never store passwords, access tokens, refresh tokens, or secrets in `localStorage` or `sessionStorage`.
 
-If a required backend or external service is unavailable, explain the limitation rather than pretending it works.
+- For cookie-based sessions, use `HttpOnly`, `Secure` in production, and an appropriate `SameSite` policy; rotate/invalidate sessions at the right lifecycle points. Assess CSRF protection for cookie-authenticated state-changing requests.
 
-## 10. Responsive Design and Accessibility
+- Restrict CORS to known origins when credentials or private APIs are involved; do not combine credentialed requests with wildcard origins.
 
-- Check the required viewport and at least one narrower mobile viewport.
-- Prevent unintended horizontal overflow.
-- Keep navigation and primary actions usable.
-- Ensure text remains readable.
-- Use semantic HTML and accessible form labels.
-- Provide meaningful alternative text for informative images.
-- Maintain visible keyboard focus.
-- Give icon-only buttons accessible names.
-- Do not communicate errors through color alone.
+- Use established security headers and safe content-type behavior through the existing server/platform configuration. Avoid leaking framework/version details where practical.
 
-Prioritize the evaluator's target viewport without unnecessarily breaking other screen sizes.
+- Render user content as text by default. Do not use unsafe HTML injection. If rich HTML is a real requirement, sanitize it with a maintained allowlist-based sanitizer on the server and use context-appropriate output encoding.
 
-## 11. Dependency and Offline Rules
+- Do not build SQL/NoSQL commands, shell commands, or filesystem paths by concatenating untrusted input.
 
-Internet connectivity may be slow or unavailable during the hackathon.
+### Abuse resistance and operational safety
 
-- Inspect installed dependencies before adding packages.
-- Prefer existing libraries and components.
-- Avoid downloads for trivial functionality.
-- Keep required fonts, icons, and assets locally available when possible.
-- Preserve the existing package manager and lockfile.
-- Do not delete lockfiles to work around installation problems.
-- Do not depend unnecessarily on remote CDNs.
-- Do not repeatedly retry downloads when the connection is unavailable.
-- Use offline installation only when the required package versions are cached locally.
+- Apply sensible rate limits to authentication, password reset, expensive, public-write, and other abuse-prone endpoints where supported.
 
-**Offline tooling does not change the database requirement.** If the configured MongoDB server is unreachable, database-dependent operations must report failure rather than writing to browser storage.
+- Bound request body sizes, pagination sizes, search lengths, and upload size/type. Avoid unbounded queries and resource-intensive input.
 
-## 12. Time Management
+- Make retries safe where possible. Use idempotency keys or duplicate protection for operations where accidental repeats have material consequences.
 
-The assignment must fit within 12 hours.
+- Avoid revealing whether sensitive accounts or records exist when that would enable enumeration.
 
-Use this adaptable time budget:
+- Log enough server-side context to diagnose failures, but redact passwords, tokens, cookies, personal data, and full request bodies containing sensitive data.
 
-- 0–10%: Inspect requirements, references, and repository.
-- 10–20%: Establish the main layout and architecture.
-- 20–60%: Implement required pages, APIs, and MongoDB operations.
-- 60–80%: Refine visual accuracy and responsive behavior.
-- 80–95%: Test critical workflows and fix defects.
-- 95–100%: Final verification and delivery.
+- Keep secrets in environment/secret management, never in source, client bundles, screenshots, or committed `.env` files. Maintain appropriate `.gitignore` entries. Do not print secret values during debugging.
 
-Adjust according to the actual assignment.
+- Use TLS for deployed sensitive traffic. Do not disable certificate or security checks to work around connectivity issues.
 
-- Complete the highest-priority workflow first.
-- Keep the application runnable.
-- Compare the UI against the reference throughout development.
-- Fix blockers and major visual discrepancies before optional enhancements.
-- Do not spend excessive time perfecting minor details while core requirements are missing.
-- Do not add unrequested features near the deadline.
+## 4. Form and Input Validation — Empty Values Included
 
-## 13. AI Agent Workflow
+Every form must be understandable, accessible, and validated on both client and server. The server validation remains authoritative.
 
-For each implementation task:
+### Define the data contract first
 
-1. Read the relevant files.
-2. Identify the smallest sensible change.
-3. Implement it.
-4. Run the most relevant available check.
-5. Verify the result when possible.
-6. Report what changed and what remains unverified.
+For each field, specify whether it is required or optional, its type, normalization rules, minimum/maximum length or numeric range, allowed values, and any relationship to other fields. Keep client and server rules aligned where practical, without duplicating complex business logic in a way that can drift.
 
-Before substantial changes, briefly state the intended approach.
+### Empty and malformed input
 
-Avoid unnecessary rewrites, unrelated refactoring, excessive planning, and repeated explanations.
+- Distinguish a missing field, `null`, an empty string, whitespace-only text, and a legitimate value such as `0` or `false`.
 
-If a test fails, investigate the actual error. Do not remove tests, hide failures, or weaken validation merely to get a passing result.
+- For required text fields, trim surrounding whitespace for validation and reject values that become empty. Do not treat whitespace as meaningful content unless the domain explicitly requires it.
 
-## 14. Testing and Verification
+- For optional fields, normalize blank/whitespace-only input consistently (for example, to `undefined` or `null`) according to the data model; do not accidentally save meaningless empty strings.
 
-After meaningful changes:
+- Handle empty textareas exactly like other text fields. Enforce minimum/maximum character limits and show a remaining/maximum count if it helps the user.
 
-- Run relevant lint, type-check, or test commands when available.
-- Start the application and inspect affected pages.
-- Check browser console errors when possible.
-- Test important user interactions.
-- Verify responsive behavior.
-- Check API responses and database persistence.
-- Confirm failed database operations display appropriate errors.
-- Confirm successful database writes remain available after reloading the application.
+- Validate numeric inputs as numbers with finite values and explicit bounds; do not let empty strings silently become `0` or accept `NaN`/infinity.
 
-For database-dependent features, verify the complete workflow:
+- Validate dates, email addresses, URLs, identifiers, files, and enums with appropriate parsers/rules instead of loose truthiness checks.
 
-1. Submit valid data.
-2. Confirm the API reports success only after the database operation succeeds.
-3. Read the record back through the intended application flow.
-4. Reload the page and confirm the record is still present.
-5. Test invalid input and relevant failure scenarios.
+- Do not reject legitimate Unicode, names, or punctuation with overly restrictive regexes. Do not attempt to “sanitize” arbitrary text by stripping characters; validate for the intended field and safely encode when displaying it.
 
-Before delivery, confirm the app starts correctly, the required routes work, critical features are implemented, and relevant checks have been performed.
+- Prevent overlong input, unexpected nested objects, invalid arrays, malformed JSON, and unsupported file types/sizes.
 
-Disclose checks that could not be run.
+### Form UX and accessibility
 
-## 15. Git and Change Safety
+- Use semantic forms, associated labels, appropriate input types, and clear required/optional indicators. Placeholders are examples, not labels.
 
-- Inspect `git status` before substantial changes.
-- Preserve existing user changes.
-- Do not reset, clean, force-push, or discard work without explicit authorization.
-- Keep changes focused on the assignment.
-- Do not commit or push unless requested or required.
-- Never include credentials in source code or commits.
-- Keep `.env` files and secrets out of version control.
-- Maintain appropriate `.gitignore` rules.
+- Validate on submit and use a sensible, non-disruptive strategy for inline feedback (for example, after touch/blur); do not show errors before users can reasonably act.
 
-## 16. Definition of Done
+- Put a clear message beside each invalid field and provide an error summary or focus the first invalid field for longer forms. Use accessible descriptions and `aria-invalid`/`aria-describedby` where appropriate.
 
-- [ ] All required pages and features are implemented.
-- [ ] The application runs locally.
-- [ ] The UI closely matches the supplied reference.
-- [ ] Primary interactions work.
-- [ ] Required application records persist in MongoDB.
-- [ ] Successful writes and failed writes are handled correctly.
-- [ ] No browser storage or mock data substitutes for required MongoDB persistence.
-- [ ] Authentication and authorization requirements are enforced where applicable.
-- [ ] The layout works at the required viewport sizes.
-- [ ] No known critical runtime errors remain.
-- [ ] Relevant available checks have been run.
-- [ ] Remaining limitations are reported honestly.
+- Preserve safe user-entered values after validation or network failure; never clear a form just because submission failed.
+
+- Show submitting/loading state, prevent accidental duplicate submission, and restore the control after completion/failure. Do not mistake a disabled button for server-side duplicate protection.
+
+- Show success only after the server confirms the operation. On failure, display a useful, non-sensitive message and allow a safe retry.
+
+- Handle offline/network errors, server validation errors, expired sessions, and conflict responses distinctly when practical.
+
+- Ensure controls work with keyboard and screen readers; do not communicate validity using color alone.
+
+### Data rendering
+
+- Render untrusted values as text, not executable markup.
+
+- Handle missing/null fields without crashes; use explicit empty states rather than misleading placeholder data.
+
+- Format data at the presentation layer without changing the stored source of truth.
+
+- Avoid exposing private fields in API responses or HTML, including password hashes, tokens, internal flags, and fields the current caller is not permitted to view.
+
+## 5. API and Error-Handling Rules
+
+- Keep route definitions, schema validation, authorization, business logic, and persistence organized according to the existing project structure.
+
+- Use appropriate HTTP methods and status codes (`400`/`422` for invalid input according to project convention, `401` unauthenticated, `403` unauthorized, `404` missing/hidden resources, `409` conflicts, and `5xx` unexpected server failures).
+
+- Return a consistent response shape. Expose actionable validation details without exposing stack traces, raw database errors, secrets, or sensitive existence checks.
+
+- Catch/propagate asynchronous errors through the established error middleware. Do not swallow errors or return success before required work completes.
+
+- Do not leak database documents wholesale. Select fields and serialize a deliberate public response DTO.
+
+- Avoid over-fetching; paginate list endpoints, set safe maximum page sizes, and validate sort/filter options against allowlists.
+
+- For mutations, update the UI from a confirmed response. If using optimistic UI, roll back on failure and explain the state accurately.
+
+- Keep destructive operations protected, narrowly scoped, and confirmed in the interface when user data could be lost.
+
+## 6. MongoDB Persistence — Project Requirement
+
+**MongoDB is the source of truth for persistent application/business data in this project.** Use the existing MongoDB connection and data-access architecture.
+
+- Persist required records through the backend; use appropriate schemas/types, constraints, indexes, and timestamps where useful.
+
+- Validate and authorize before database changes. Never trust client-supplied ownership or privileged fields.
+
+- Build queries from validated values; avoid raw client filters and unrestricted object spreading.
+
+- Handle missing, duplicate, invalid, conflicting, and unavailable records explicitly. Use pagination for collections that can grow.
+
+- Select only fields needed by the caller and omit secrets/private fields from responses.
+
+- Confirm the write actually succeeded before reporting success. Verify important reads and writes through the real application path when possible.
+
+- Do not replace required MongoDB persistence with browser storage, hardcoded arrays, mock objects, or static JSON. Browser memory may hold temporary UI state; caching may improve reads but cannot become the source of truth.
+
+- Cookies may hold appropriately protected session identifiers, not business records. Never put passwords or sensitive credentials in browser storage.
+
+- If MongoDB is unavailable, report a clear failure, preserve safe retry behavior, and do not silently queue business writes in browser storage or pretend the data was saved.
+
+## 7. Frontend, UI, and Accessibility
+
+- Preserve the established framework, component patterns, aliases, styling, and design system.
+
+- Keep components focused; avoid duplicate state and unnecessary renders. Use stable list keys and clean up subscriptions, timers, and event listeners.
+
+- Every visible interactive control must do what it indicates. No fake buttons, dead links, or success states without real work.
+
+- Model loading, empty, populated, validation-error, request-error, and success states explicitly.
+
+- Use semantic HTML, visible focus, keyboard access, meaningful image alt text, accessible names for icon-only controls, and readable contrast.
+
+- Check the target viewport and at least one narrow/mobile viewport. Prevent unintended horizontal overflow and keep essential actions usable.
+
+- Follow the supplied design references for hierarchy, spacing, typography, color, image crop, and interaction states. Use supplied assets when relevant; do not replace them with unrelated imagery or emoji.
+
+- Compare screenshots/rendered output to references when tools permit; fix the largest discrepancies first. Do not claim pixel-perfect fidelity without visual verification.
+
+- Avoid unsafe HTML rendering, secret-bearing environment variables in client bundles, and client-side authorization assumptions.
+
+## 8. Project-Specific Tooling and Stack
+
+The existing frontend is expected to use **React, Vite, TypeScript, Tailwind CSS v4, and shadcn/ui with the Radix-based Nova preset**. Confirm the repository before relying on this assumption.
+
+- Preserve the installed framework, package manager, dependencies, aliases, components, and styling configuration unless a change is necessary and justified.
+
+- Prefer existing shadcn/ui components and project utilities over a competing component library.
+
+- Verify Tailwind version and existing syntax before editing configuration or styles.
+
+- Adapt generated UI code to this repository; do not blindly copy a generated project, overwrite configuration, or assume an external design tool can see local files.
+
+- Use Graphify for codebase context when installed and useful. Its graph is auxiliary; verify conclusions against actual source, tests, and runtime behavior. If unavailable or stale, inspect files directly.
+
+- Use v0 for visual exploration/UI code only when available and useful. Generated code does not replace integration, API security, persistence, or testing.
+
+- Use tools when they materially improve speed, context, design accuracy, or reliability. Do not duplicate work across tools.
+
+## 9. Design and Task Execution
+
+Convert the task into a small checklist: required pages/routes, user journeys, data entities, API operations, permissions, validation/error states, design references, and responsive behavior.
+
+Implement the highest-priority complete flow first. For reference-driven UI, use this sequence:
+
+1. Inspect reference and existing assets.
+
+1. Establish page structure and proportions.
+
+1. Match typography, spacing, hierarchy, and key visual elements.
+
+1. Implement real interactions and data flow.
+
+1. Verify loading, empty, success, invalid, and failure states.
+
+1. Compare the rendered page with the reference and correct the biggest gaps.
+
+Do not spend time perfecting minor details while core requirements or security controls are missing. Do not add optional features late in the task unless explicitly requested or necessary for correctness.
+
+## 10. Testing and Verification
+
+Run available checks that provide the most value for the changed code: lint, type-check, focused tests, build, and runtime/browser checks. Report unavailable checks rather than implying they passed.
+
+For each affected feature, verify as practical:
+
+- Main happy path and expected API response.
+
+- Missing, empty, whitespace-only, wrong-type, malformed, too-short, and too-long inputs as relevant.
+
+- Unauthorized and unauthenticated access; attempts to access another user's record.
+
+- Duplicate/conflicting submissions and safe retry behavior.
+
+- Database unavailable/error behavior without false success.
+
+- Loading, no-results/empty, error, and populated UI states.
+
+- Keyboard/accessibility basics and responsive layout.
+
+- Console/server errors and unexpected data exposure.
+
+For MongoDB-backed changes, submit valid data, confirm success only after the write, read it through the intended app flow, reload and confirm persistence, and exercise relevant invalid/failure cases. Use test data and avoid destructive actions against real user data.
+
+## 11. Dependency, Offline, and Git Safety
+
+- Inspect installed dependencies and scripts before adding packages; avoid dependencies for trivial functionality.
+
+- Preserve the existing package manager and lockfile. Do not delete lockfiles to work around installation issues.
+
+- Avoid unnecessary remote CDN dependencies; keep essential assets available as the project expects.
+
+- Offline tooling does not change the MongoDB persistence requirement. If the configured database is unreachable, show failure rather than switching stores or inventing saved records.
+
+- Inspect `git status` before substantial work; preserve user modifications.
+
+- Do not reset, clean, force-push, discard changes, commit, or push unless requested or required by the task.
+
+- Keep `.env` and secrets out of version control; review `.gitignore` and the final diff.
+
+## 12. Definition of Done
+
+- [ ] Explicit task requirements and primary user flow are implemented.
+
+- [ ] Existing application architecture and user changes are preserved.
+
+- [ ] API routes validate untrusted input and enforce authentication, authorization, ownership, and least privilege where applicable.
+
+- [ ] Forms handle missing, blank, whitespace-only, malformed, boundary, loading, and failure cases appropriately.
+
+- [ ] User-provided content is safely rendered; sensitive data and internal errors are not exposed.
+
+- [ ] Required business data persists in MongoDB and is not represented as saved when a write failed.
+
+- [ ] UI has meaningful loading, empty, success, and error states, and is usable on required screen sizes.
+
+- [ ] Relevant checks have actually run; unresolved failures and unverified areas are disclosed.
+
+- [ ] The final diff contains no unrelated changes or accidental secrets.
 
 ## Final Principle
 
-**Understand the task. Match the reference. Implement the real functionality. Persist application data in MongoDB. Verify the result. Deliver on time.**
-
-Prefer a small, complete, visually accurate, database-backed application over a large, unfinished, over-engineered one.
+**Understand the existing code. Implement the smallest complete solution. Validate every boundary. Enforce security on the server. Make the UI honest and accessible. Verify before claiming done.**
