@@ -6,6 +6,7 @@ import RoleRoute from "./components/guards/RoleRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Loading from "./components/shared/Loading";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import Dashboard from "./pages/Dashboard";
 
 // Setup & Auth screens (Slice F1)
 import Setup from "./pages/Setup";
@@ -15,6 +16,10 @@ import ChangePassword from "./pages/ChangePassword";
 // Organization & Employee screens (Slice F2)
 import Organization from "./pages/Organization";
 import Employees from "./pages/Employees";
+import Attendance from "./pages/Attendance";
+import Leave from "./pages/Leave";
+import Payroll from "./pages/Payroll";
+import { AnnouncementsPage, AuditPage, NotificationsPage } from "./pages/CommsPages";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,11 +60,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="dashboard"
           element={
-            <PlaceholderPage
-              title="Dashboard"
-              description="Real-time KPI metrics, charts, summaries, and action shortcuts."
-              slice="F6"
-            />
+            <Dashboard />
           }
         />
 
@@ -86,13 +87,7 @@ const AppRoutes: React.FC = () => {
         {/* Attendance: All roles (Employee checkin/calendar; HR/Admin attendance board) */}
         <Route
           path="attendance"
-          element={
-            <PlaceholderPage
-              title="Attendance"
-              description="Geo-verified check-in, month calendar, daily rosters, and status audits."
-              slice="F3"
-            />
-          }
+          element={<Attendance />}
         />
 
         {/* Corrections Inbox: HR only */}
@@ -112,13 +107,7 @@ const AppRoutes: React.FC = () => {
         {/* Leave: All roles (Employee apply/balances; HR inbox; Admin read-only) */}
         <Route
           path="leave"
-          element={
-            <PlaceholderPage
-              title="Leave Management"
-              description="Balances, quota consumption, smart leave application, and approvals."
-              slice="F4"
-            />
-          }
+          element={<Leave />}
         />
 
         {/* Payroll: HR (draft/edit) & Admin (review/finalize) */}
@@ -126,11 +115,7 @@ const AppRoutes: React.FC = () => {
           path="payroll"
           element={
             <RoleRoute allowedRoles={["admin", "hr"]}>
-              <PlaceholderPage
-                title="Payroll Processing"
-                description="Monthly gross-to-net computation, attendance deductions, tax slabs, and run finalization."
-                slice="F5"
-              />
+            <Payroll />
             </RoleRoute>
           }
         />
@@ -153,11 +138,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="announcements"
           element={
-            <PlaceholderPage
-              title="Announcements"
-              description="Company-wide notices, policy broadcasts, and HR alerts."
-              slice="F8"
-            />
+            <AnnouncementsPage />
           }
         />
 
@@ -166,11 +147,7 @@ const AppRoutes: React.FC = () => {
           path="audit"
           element={
             <RoleRoute allowedRoles={["admin"]}>
-              <PlaceholderPage
-                title="Audit Trail"
-                description="System-wide security logs, actor tracking, and before/after mutation diffs."
-                slice="F8"
-              />
+<AuditPage />
             </RoleRoute>
           }
         />
@@ -179,11 +156,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="notifications"
           element={
-            <PlaceholderPage
-              title="Notifications"
-              description="Real-time alerts, approval requests, and announcement pings."
-              slice="F8"
-            />
+            <NotificationsPage />
           }
         />
 
