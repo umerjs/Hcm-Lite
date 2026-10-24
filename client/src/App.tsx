@@ -6,6 +6,7 @@ import RoleRoute from "./components/guards/RoleRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Loading from "./components/shared/Loading";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import Dashboard from "./pages/Dashboard";
 
 // Setup & Auth screens (Slice F1)
 import Setup from "./pages/Setup";
@@ -55,11 +56,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="dashboard"
           element={
-            <PlaceholderPage
-              title="Dashboard"
-              description="Real-time KPI metrics, charts, summaries, and action shortcuts."
-              slice="F6"
-            />
+            <Dashboard />
           }
         />
 
