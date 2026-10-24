@@ -1,7 +1,7 @@
 # HCM Lite Frontend Spec
 
 ## Conventions
-- **API Base:** `VITE_API_URL` (default `http://localhost:2002/api/v1`). 
+- **API Base:** `VITE_API_URL` (default `https://hcm-lite-dev.vercel.app/api/v1`). 
 - **Auth:** `Authorization: Bearer <token>`. Store token in `localStorage` under `hcm_token`.
 - **Error Shape:** `{ error: { code, message, fields? } }`. Show message in a toast; map fields to form errors. 401 clears token and redirects to `/login`.
 - **Shared Components:** `Loading`, `EmptyState`, `ErrorState`, `ConfirmDialog`, `StatCard`, `DataTable` (server paging), `StatusBadge` (attendance, leave, payroll statuses), `AiBadge`, `PageHeader`, `FormField`.

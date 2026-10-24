@@ -2,6 +2,9 @@
 
 A modern, production-grade Human Capital Management (HCM) system designed and engineered for the Saylani Hackathon. Built from the ground up for performance, auditability, and ease of use, featuring geofenced attendance, automated payroll, real-time analytics dashboards, and an LLM-powered smart leave assistant.
 
+> 🌐 **Live Deployment:** [https://hcm-lite-dev.vercel.app/](https://hcm-lite-dev.vercel.app/)  
+> 📡 **Production API:** `https://hcm-lite-dev.vercel.app/api/v1`
+
 ---
 
 ## 🛠 Tech Stack
@@ -134,7 +137,7 @@ AI_BASE_URL=https://api.openai.com/v1
 AI_MODEL=gpt-3.5-turbo
 
 # Client CORS
-CLIENT_ORIGIN=http://localhost:3003
+CLIENT_ORIGIN=https://hcm-lite-dev.vercel.app,http://localhost:3003
 ```
 
 ### 3. First-Run Setup & Admin Account Provisioning
@@ -146,7 +149,7 @@ When connecting to a fresh MongoDB database, the application automatically recog
    bun dev:server # or "cd server && bun dev"
    ```
 2. Run the first-time setup via API or frontend:
-   - **Endpoint:** `POST http://localhost:2002/api/v1/setup`
+   - **Endpoint:** `POST https://hcm-lite-dev.vercel.app/api/v1/setup` (or `POST http://localhost:2002/api/v1/setup` locally)
    - **Payload:**
      ```json
      {

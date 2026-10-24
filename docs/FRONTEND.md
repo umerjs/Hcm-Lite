@@ -56,7 +56,7 @@ Then use it as `/fe-slice F3 attendance screens` after reading the prompts in Se
 
 ## Conventions
 
-- API base: VITE_API_URL (default http://localhost:2002/api/v1). Auth: Authorization: Bearer <token>. Store the token in localStorage under hcm_token.
+- API base: VITE_API_URL (default https://hcm-lite-dev.vercel.app/api/v1). Auth: Authorization: Bearer <token>. Store the token in localStorage under hcm_token.
 - Error shape: { error: { code, message, fields? } }. Show message in a toast; map fields to form errors. 401 clears the token and redirects to /login. 403 shows a Forbidden state. 409 and 422 show the server message inline. 429 on AI shows "Too many AI requests, try again later".
 - Mock mode: VITE_USE_MOCK=true makes each api function return typed fixtures from client/src/api/mocks/. Build against mocks first, then turn the real endpoint on per module, one at a time. Fixtures must match client/src/types/api.ts exactly.
 - Shared components (build once, reuse everywhere): Loading, EmptyState, ErrorState, ConfirmDialog, StatCard, DataTable (server paging), StatusBadge (attendance, leave, payroll statuses), AiBadge ("AI-generated"), PageHeader, FormField, MoneyText, DateText.

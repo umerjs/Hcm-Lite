@@ -5,7 +5,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.VITE_BACKEND_URL
     ? `${import.meta.env.VITE_BACKEND_URL}/api/v1`
-    : "/api/v1");
+    : "https://hcm-lite-dev.vercel.app/api/v1");
 
 export const TOKEN_STORAGE_KEY = "hcm_token";
 

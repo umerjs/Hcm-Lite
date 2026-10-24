@@ -35,9 +35,15 @@ app.set("trust proxy", 1);
 app.use(helmet());
 
 // ── CORS — restrict to the frontend origin ────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:3003")
+const defaultAllowedOrigins = ["https://hcm-lite-dev.vercel.app", "http://localhost:3003"];
+
+const allowedOrigins = (process.env.CLIENT_ORIGIN || defaultAllowedOrigins.join(","))
   .split(",")
   .map((o) => o.trim());
+
+if (!allowedOrigins.includes("https://hcm-lite-dev.vercel.app")) {
+  allowedOrigins.push("https://hcm-lite-dev.vercel.app");
+}
 
 if (process.env.VERCEL_URL) {
   allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
@@ -47,11 +53,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (curl, Postman, server-to-server) or matching origins
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
-      ) {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
       callback(new Error(`CORS: origin ${origin} not allowed`));
