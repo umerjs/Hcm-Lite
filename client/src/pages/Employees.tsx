@@ -1,54 +1,40 @@
-import { useMemo, useState } from "react";
-import { Mail, Phone, Plus, Search, UserRound, X } from "lucide-react";
+import { FormEvent, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Mail, Plus, Search, UserRound, X } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import StatusBadge from "../components/shared/StatusBadge";
+import { http } from "../api/http";
+import type { CreateEmployeeRequest, CreateEmployeeResponse, Department, Employee, GetEmployeesResponse } from "../types/api";
 
-const employees = [
-  { code: "EMP-0024", name: "Ayesha Khan", email: "ayesha.khan@hcm-lite.com", department: "Engineering", status: "active" },
-  { code: "EMP-0012", name: "Bilal Ahmed", email: "bilal.ahmed@hcm-lite.com", department: "Operations", status: "active" },
-  { code: "EMP-0031", name: "Mariam Raza", email: "mariam.raza@hcm-lite.com", department: "Marketing", status: "active" },
-  { code: "EMP-0008", name: "Usman Tariq", email: "usman.tariq@hcm-lite.com", department: "Design", status: "active" },
-  { code: "EMP-0019", name: "Sara Malik", email: "sara.malik@hcm-lite.com", department: "Finance", status: "exited" },
-  { code: "EMP-0038", name: "Hamza Qureshi", email: "hamza.qureshi@hcm-lite.com", department: "Engineering", status: "active" },
-];
-
-const departments = ["All departments", "Engineering", "Operations", "Marketing", "Design", "Finance"];
+type RegisterForm = CreateEmployeeRequest;
+const unwrap = <T,>(value: T | { data: T }): T => (typeof value === "object" && value !== null && "data" in value ? value.data : value) as T;
 
 export default function Employees() {
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [department, setDepartment] = useState("All departments");
   const [status, setStatus] = useState("All statuses");
   const [open, setOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [credentials, setCredentials] = useState<string | null>(null);
+  const [form, setForm] = useState<RegisterForm>({ name: "", email: "", phone: "", gender: "other", departmentId: "", designationId: "", joinDate: new Date().toISOString().slice(0, 10), basicSalary: 0 });
+  const employeesQuery = useQuery({ queryKey: ["employees", query, department, status], queryFn: async () => unwrap<GetEmployeesResponse>(await http.get<GetEmployeesResponse>("/employees", { params: { q: query || undefined, departmentId: department === "All departments" ? undefined : department, status: status === "All statuses" ? undefined : status, page: 1, pageSize: 100 } }).then((response) => response.data)) });
+  const departmentsQuery = useQuery({ queryKey: ["departments"], queryFn: async () => unwrap<Department[]>(await http.get<Department[] | { data: Department[] }>("/departments").then((response) => response.data)) });
+  const createEmployee = useMutation({ mutationFn: async (payload: RegisterForm) => http.post<CreateEmployeeResponse>("/employees", payload).then((response) => unwrap(response.data)), onSuccess: (response) => { setCredentials(response.tempPassword); setOpen(false); setForm({ name: "", email: "", phone: "", gender: "other", departmentId: "", designationId: "", joinDate: new Date().toISOString().slice(0, 10), basicSalary: 0 }); queryClient.invalidateQueries({ queryKey: ["employees"] }); } });
+  const employees = employeesQuery.data?.data ?? [];
+  const departments = departmentsQuery.data ?? [];
+  const visibleEmployees = useMemo(() => employees.filter((employee) => {
+    const employeeDepartment = typeof employee.departmentId === "string" ? employee.departmentId : employee.departmentId.name;
+    return (department === "All departments" || employeeDepartment === department) && (status === "All statuses" || employee.status === status);
+  }), [employees, department, status]);
+  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); createEmployee.mutate(form); };
+  const update = (key: keyof RegisterForm, value: string | number) => setForm((current) => ({ ...current, [key]: value }));
 
-  const filtered = useMemo(() => employees.filter((employee) => {
-    const matchesQuery = `${employee.name} ${employee.email} ${employee.code}`.toLowerCase().includes(query.toLowerCase());
-    const matchesDepartment = department === "All departments" || employee.department === department;
-    const matchesStatus = status === "All statuses" || employee.status === status;
-    return matchesQuery && matchesDepartment && matchesStatus;
-  }), [query, department, status]);
-
-  return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div><p className="text-sm font-medium text-emerald-600">People & culture</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Employees</h1><p className="mt-1 text-sm text-muted-foreground">Manage your workforce, roles, and employee records.</p></div>
-        <Button onClick={() => { setSaved(false); setOpen(true); }} className="bg-emerald-600 text-white hover:bg-emerald-700"><Plus data-icon="inline-start" /> Register employee</Button>
-      </header>
-
-      <Card>
-        <CardHeader className="gap-4 pb-4"><div><CardTitle>Employee directory</CardTitle><CardDescription>{filtered.length} of {employees.length} employees shown</CardDescription></div>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <label className="relative min-w-0 flex-1 md:min-w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" data-icon="inline-start" /><span className="sr-only">Search employees</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, email, or code" className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-emerald-600" /></label>
-            <select aria-label="Department" value={department} onChange={(event) => setDepartment(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-emerald-600">{departments.map((item) => <option key={item}>{item}</option>)}</select>
-            <select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"><option>All statuses</option><option value="active">Active</option><option value="exited">Exited</option></select>
-          </div>
-        </CardHeader>
-        <CardContent><div className="overflow-x-auto rounded-lg border"><Table><TableHeader><TableRow><TableHead>Employee code</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Department</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{filtered.map((employee) => <TableRow key={employee.code}><TableCell className="font-mono text-xs text-muted-foreground">{employee.code}</TableCell><TableCell className="font-medium">{employee.name}</TableCell><TableCell className="text-muted-foreground">{employee.email}</TableCell><TableCell>{employee.department}</TableCell><TableCell><StatusBadge status={employee.status === "exited" ? "cancelled" : "active"} label={employee.status === "exited" ? "Exited" : "Active"} /></TableCell></TableRow>)}</TableBody></Table></div></CardContent>
-      </Card>
-
-      {open && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="register-title"><div className="w-full max-w-2xl rounded-2xl border bg-card shadow-xl"><div className="flex items-start justify-between border-b p-6"><div><h2 id="register-title" className="text-lg font-semibold">Register employee</h2><p className="mt-1 text-sm text-muted-foreground">Add a new employee to your organization directory.</p></div><button onClick={() => setOpen(false)} aria-label="Close dialog" className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X /></button></div><form onSubmit={(event) => { event.preventDefault(); setSaved(true); }} className="flex flex-col gap-5 p-6"><div className="grid gap-4 sm:grid-cols-2">{[["Name", "Full name", "text"], ["Email", "name@company.com", "email"], ["Phone", "+92 300 1234567", "tel"], ["Dept", "e.g. Engineering", "text"], ["Designation", "e.g. Product Designer", "text"], ["Basic salary", "100,000", "number"]].map(([label, placeholder, type]) => <label key={label} className="flex flex-col gap-2 text-sm font-medium">{label}<input required={label === "Name" || label === "Email"} type={type} placeholder={placeholder} className="h-10 rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-2 focus-visible:ring-emerald-600" /></label>)}</div>{saved && <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">Employee registered successfully.</p>}<div className="flex justify-end gap-3 border-t pt-4"><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700"><UserRound data-icon="inline-start" /> Save employee</Button></div></form></div></div>}
-    </div>
-  );
+  return <div className="flex flex-col gap-6">
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-medium text-emerald-600">People & culture</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Employees</h1><p className="mt-1 text-sm text-muted-foreground">Manage your workforce, roles, and employee records.</p></div><Button onClick={() => setOpen(true)} className="bg-emerald-600 text-white hover:bg-emerald-700"><Plus data-icon="inline-start" /> Register employee</Button></header>
+    <Card><CardHeader className="gap-4 pb-4"><div><CardTitle>Employee directory</CardTitle><CardDescription>{visibleEmployees.length} of {employees.length} employees shown</CardDescription></div><div className="flex flex-col gap-3 md:flex-row"><label className="relative min-w-0 flex-1 md:min-w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><span className="sr-only">Search employees</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, email, or code" className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-emerald-600" /></label><select aria-label="Department" value={department} onChange={(event) => setDepartment(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm"><option>All departments</option>{departments.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}</select><select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm"><option>All statuses</option><option value="active">Active</option><option value="exited">Exited</option></select></div></CardHeader><CardContent><div className="overflow-x-auto rounded-lg border"><Table><TableHeader><TableRow><TableHead>Employee code</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Department</TableHead><TableHead>Status</TableHead></TableRow></TableHeader><TableBody>{visibleEmployees.map((employee: Employee) => <TableRow key={employee._id}><TableCell className="font-mono text-xs text-muted-foreground">{employee.code}</TableCell><TableCell className="font-medium">{employee.name}</TableCell><TableCell className="text-muted-foreground">{employee.email}</TableCell><TableCell>{typeof employee.departmentId === "string" ? employee.departmentId : employee.departmentId.name}</TableCell><TableCell><StatusBadge status={employee.status === "exited" ? "cancelled" : "active"} label={employee.status === "exited" ? "Exited" : employee.status} /></TableCell></TableRow>)}</TableBody></Table></div></CardContent></Card>
+    {open && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="register-title"><div className="w-full max-w-2xl rounded-2xl border bg-card shadow-xl"><div className="flex items-start justify-between border-b p-6"><div><h2 id="register-title" className="text-lg font-semibold">Register employee</h2><p className="mt-1 text-sm text-muted-foreground">Add a new employee to your organization directory.</p></div><button onClick={() => setOpen(false)} aria-label="Close dialog" className="rounded-md p-1 text-muted-foreground hover:bg-muted"><X /></button></div><form onSubmit={submit} className="flex flex-col gap-5 p-6"><div className="grid gap-4 sm:grid-cols-2">{([...["name", "Name", "Full name", "text"], ["email", "Email", "name@company.com", "email"], ["phone", "Phone", "+92 300 1234567", "tel"], ["departmentId", "Dept", "Department ID", "text"], ["designationId", "Designation", "Designation ID", "text"], ["basicSalary", "Basic salary", "100,000", "number"]] as const).map(([key, label, placeholder, type]) => <label key={key} className="flex flex-col gap-2 text-sm font-medium">{label}<input required={key === "name" || key === "email"} type={type} value={String(form[key])} onChange={(event) => update(key, type === "number" ? Number(event.target.value) : event.target.value)} placeholder={placeholder} className="h-10 rounded-lg border border-input bg-background px-3 font-normal outline-none focus-visible:ring-2 focus-visible:ring-emerald-600" /></label>)}</div>{createEmployee.isError && <p className="text-sm text-destructive">Unable to register employee. Please check the details and try again.</p>}<div className="flex justify-end gap-3 border-t pt-4"><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={createEmployee.isPending} className="bg-emerald-600 text-white hover:bg-emerald-700"><UserRound data-icon="inline-start" /> {createEmployee.isPending ? "Saving..." : "Save employee"}</Button></div></form></div></div>}
+    {credentials && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="password-title"><div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl"><h2 id="password-title" className="text-lg font-semibold">Employee registered</h2><p className="mt-2 text-sm text-muted-foreground">Share this temporary password with the employee.</p><div className="mt-4 flex items-center gap-2 rounded-lg border bg-muted/40 p-3 font-mono tabular-nums"><span className="flex-1">{credentials}</span><Button type="button" variant="outline" onClick={() => navigator.clipboard.writeText(credentials)}>Copy</Button></div><Button className="mt-5 w-full bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => setCredentials(null)}>Done</Button></div></div>}
+  </div>;
 }
