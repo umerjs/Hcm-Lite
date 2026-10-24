@@ -18,6 +18,7 @@ import Organization from "./pages/Organization";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
 import Leave from "./pages/Leave";
+import Payroll from "./pages/Payroll";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,11 +114,7 @@ const AppRoutes: React.FC = () => {
           path="payroll"
           element={
             <RoleRoute allowedRoles={["admin", "hr"]}>
-              <PlaceholderPage
-                title="Payroll Processing"
-                description="Monthly gross-to-net computation, attendance deductions, tax slabs, and run finalization."
-                slice="F5"
-              />
+            <Payroll />
             </RoleRoute>
           }
         />
