@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import mongoose from "mongoose";
 import { connect_db } from "./libs/mongodb.mjs";
 import {
   authRoutes,
@@ -38,17 +39,39 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:3003")
   .split(",")
   .map((o) => o.trim());
 
+if (process.env.VERCEL_URL) {
+  allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, Postman, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow requests with no origin (curl, Postman, server-to-server) or matching origins
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   }),
 );
+
+// ── Ensure DB Connection for Serverless ───────────────────────────────────────
+app.use(async (_req, _res, next) => {
+  if (mongoose.connection.readyState !== 1 && process.env.NODE_ENV !== "test") {
+    try {
+      await connect_db();
+    } catch (err) {
+      return next(err);
+    }
+  }
+  next();
+});
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "1mb" }));

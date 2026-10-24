@@ -16,6 +16,10 @@ if (envPath) {
 const uri = process.env.MONGODB_URI;
 
 export const connect_db = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
   if (!uri) {
     throw new Error("MONGODB_URI is required");
   }
@@ -26,6 +30,7 @@ export const connect_db = async () => {
     });
 
     console.log("Mongoose connected successfully");
+    return mongoose.connection;
   } catch (error) {
     console.error("MongoDB connection failed:", error);
     throw error;
