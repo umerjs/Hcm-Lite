@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { http, extractErrorMessage } from "../api/http";
 import { useAuth } from "../context/AuthContext";
@@ -6,7 +6,7 @@ import type { LoginResponse } from "../types/api";
 
 export const ChangePassword: React.FC = () => {
   const navigate = useNavigate();
-  const { login, logout, user } = useAuth();
+  const { login, logout, user, isAuthenticated, isLoading, mustChangePassword } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -14,6 +14,16 @@ export const ChangePassword: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate("/login", { replace: true });
+      } else if (!mustChangePassword) {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [isLoading, isAuthenticated, mustChangePassword, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

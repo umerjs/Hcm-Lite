@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import RoleRoute from "./components/guards/RoleRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Loading from "./components/shared/Loading";
+import { ToastContainer } from "./components/shared/Toast";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import Dashboard from "./pages/Dashboard";
 
@@ -32,7 +33,7 @@ const queryClient = new QueryClient({
 });
 
 const AppRoutes: React.FC = () => {
-  const { isSetup, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return <Loading fullScreen text="Initializing HCM Lite..." />;
@@ -57,12 +58,7 @@ const AppRoutes: React.FC = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
 
         {/* Dashboard: All roles */}
-        <Route
-          path="dashboard"
-          element={
-            <Dashboard />
-          }
-        />
+        <Route path="dashboard" element={<Dashboard />} />
 
         {/* Organization: Admin only */}
         <Route
@@ -84,11 +80,8 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Attendance: All roles (Employee checkin/calendar; HR/Admin attendance board) */}
-        <Route
-          path="attendance"
-          element={<Attendance />}
-        />
+        {/* Attendance: All roles */}
+        <Route path="attendance" element={<Attendance />} />
 
         {/* Corrections Inbox: HR only */}
         <Route
@@ -104,18 +97,15 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Leave: All roles (Employee apply/balances; HR inbox; Admin read-only) */}
-        <Route
-          path="leave"
-          element={<Leave />}
-        />
+        {/* Leave: All roles */}
+        <Route path="leave" element={<Leave />} />
 
         {/* Payroll: HR (draft/edit) & Admin (review/finalize) */}
         <Route
           path="payroll"
           element={
             <RoleRoute allowedRoles={["admin", "hr"]}>
-            <Payroll />
+              <Payroll />
             </RoleRoute>
           }
         />
@@ -135,30 +125,20 @@ const AppRoutes: React.FC = () => {
         />
 
         {/* Announcements: All roles (Admin/HR create; Employee read) */}
-        <Route
-          path="announcements"
-          element={
-            <AnnouncementsPage />
-          }
-        />
+        <Route path="announcements" element={<AnnouncementsPage />} />
 
         {/* Audit Log: Admin only */}
         <Route
           path="audit"
           element={
             <RoleRoute allowedRoles={["admin"]}>
-<AuditPage />
+              <AuditPage />
             </RoleRoute>
           }
         />
 
         {/* Notifications: All roles */}
-        <Route
-          path="notifications"
-          element={
-            <NotificationsPage />
-          }
-        />
+        <Route path="notifications" element={<NotificationsPage />} />
 
         {/* Profile: All roles */}
         <Route
@@ -184,6 +164,7 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppRoutes />
+        <ToastContainer />
       </AuthProvider>
     </QueryClientProvider>
   );

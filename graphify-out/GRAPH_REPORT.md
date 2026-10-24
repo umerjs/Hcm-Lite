@@ -1,16 +1,16 @@
 # Graph Report - Mern-Template  (2026-10-25)
 
 ## Corpus Check
-- 145 files · ~69,114 words
+- 153 files · ~69,194 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 921 nodes · 1799 edges · 60 communities (51 shown, 6 thin omitted)
+- 976 nodes · 2020 edges · 62 communities (56 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0b519e54`
+- Built from commit: `952d72cc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,16 +42,16 @@
 - HCM Lite — Frontend Kit for OpenCode
 - Stubs Registry — Owned by Backend A
 - HCM Lite — Authoritative Backend API Specification (`API_ACTUAL.md`)
-- react
-- button.tsx
+- index.ts
+- Dashboard.tsx
 - eslint.config.js
 - scripts
 - imports
 - vite.config.ts
 - HCM Lite Design System
 - formatDate
-- cloudinary.mjs
-- mongodb.mjs
+- http.ts
+- App.tsx
 - models/index.mjs
 - 6. Organization Structure (Departments & Designations)
 - 10. Employee Directory & Profiles
@@ -62,65 +62,67 @@
 - 7. Holidays & Calendar
 - 9. Users Administration (HR Accounts & Credentials)
 - 15. Dashboard Analytics & Metrics
-- devDependencies
+- setup.service.mjs
 - HCM Lite Frontend Spec
-- scripts
+- react
 - 14. Payroll & PDF Payslips
 - 3. Authentication & Password Management
-- pdf.service.mjs
+- leave.service.mjs
 - 2. Setup & First-Run Initialization
 - 5. Company Settings
-- engines
-- peerDependencies
+- notification.service.mjs
+- vercel.json
+- ai.service.mjs
+- Payroll
 
 ## God Nodes (most connected - your core abstractions)
 1. `AppError` - 89 edges
-2. `react` - 35 edges
-3. `mongoose` - 29 edges
+2. `react` - 41 edges
+3. `mongoose` - 30 edges
 4. `audit()` - 29 edges
 5. `formatDate()` - 27 edges
 6. `asyncHandler()` - 21 edges
-7. `compilerOptions` - 20 edges
-8. `requireAuth` - 20 edges
-9. `express` - 20 edges
-10. `UserModel` - 19 edges
+7. `lucide-react` - 20 edges
+8. `compilerOptions` - 20 edges
+9. `requireAuth` - 20 edges
+10. `express` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `getCorrections()` --calls--> `AppError`  [EXTRACTED]
-  server/services/correction.service.mjs → server/utils/errors.mjs
 - `AppRoutes()` --calls--> `useAuth()`  [EXTRACTED]
   client/src/App.tsx → client/src/context/AuthContext.tsx
-- `Home()` --calls--> `store`  [EXTRACTED]
-  client/src/pages/Home.tsx → client/src/store/states.ts
-- `Profile()` --calls--> `store`  [EXTRACTED]
-  client/src/pages/Profile.tsx → client/src/store/states.ts
-- `Signup()` --calls--> `store`  [EXTRACTED]
-  client/src/pages/SignUp.tsx → client/src/store/states.ts
+- `validateQuery()` --calls--> `AppError`  [EXTRACTED]
+  server/routes/attendance/index.mjs → server/utils/errors.mjs
+- `loginLimiter` --calls--> `AppError`  [EXTRACTED]
+  server/routes/auth/index.mjs → server/utils/errors.mjs
+- `validateBody()` --calls--> `AppError`  [EXTRACTED]
+  server/routes/comms/index.mjs → server/utils/errors.mjs
+- `validateBody()` --calls--> `AppError`  [EXTRACTED]
+  server/routes/correction/index.mjs → server/utils/errors.mjs
 
 ## Import Cycles
 - None detected.
 
-## Communities (60 total, 6 thin omitted)
+## Communities (62 total, 3 thin omitted)
 
 ### Community 0 - "Profile.tsx"
 Cohesion: 0.13
 Nodes (19): Button(), ButtonProps, FormProps, ButtonProps, Input(), Navbar(), PasswordInput(), PasswordInputProps (+11 more)
 
 ### Community 1 - "routes/index.mjs"
-Cohesion: 0.08
-Nodes (51): express, express-rate-limit, multer, handleMulterError(), multerMiddleware, authGuard, requireAuth, requireRole() (+43 more)
+Cohesion: 0.06
+Nodes (65): express, express-rate-limit, multer, handleMulterError(), multerMiddleware, authGuard, requireAuth, requireRole() (+57 more)
 
 ### Community 2 - "client/package.json"
-Cohesion: 0.09
-Nodes (22): @types/bun, typescript, zod, name, private, type, version, eslint (+14 more)
+Cohesion: 0.08
+Nodes (25): @types/bun, typescript, zod, name, private, type, version, class-variance-authority (+17 more)
 
 ### Community 3 - "server/package.json"
-Cohesion: 0.11
-Nodes (18): cors, dayjs, helmet, morgan, nodemailer, nodemon, author, description (+10 more)
+Cohesion: 0.05
+Nodes (40): cloudinary, cors, dayjs, dotenv, helmet, morgan, nodemailer, nodemon (+32 more)
 
 ### Community 4 - "api.ts"
-Cohesion: 0.03
-Nodes (65): AdminAnalytics, AiChatMessage, AiChatRequest, AiChatResponse, AiSmartLeaveRequest, AiSmartLeaveResponse, AiSummaryRequest, AiSummaryResponse (+57 more)
+Cohesion: 0.04
+Nodes (56): AdminAnalytics, AiChatMessage, AiChatRequest, AiChatResponse, AiSmartLeaveRequest, AiSmartLeaveResponse, AiSummaryRequest, AiSummaryResponse (+48 more)
 
 ### Community 5 - "components.json"
 Cohesion: 0.09
@@ -136,11 +138,11 @@ Nodes (19): compilerOptions, allowArbitraryExtensions, allowImportingTsExtension
 
 ### Community 8 - "dependencies"
 Cohesion: 0.09
-Nodes (22): dependencies, axios, class-variance-authority, cn, @fontsource-variable/geist, @hookform/resolvers, lucide-react, radix-ui (+14 more)
+Nodes (23): dependencies, axios, class-variance-authority, cn, @fontsource-variable/geist, @hookform/resolvers, lucide-react, radix-ui (+15 more)
 
 ### Community 9 - "scripts"
-Cohesion: 0.20
-Nodes (9): name, private, scripts, build, dev, dev:server, format, install:all (+1 more)
+Cohesion: 0.17
+Nodes (11): name, private, scripts, build, dev, dev:client, dev:server, format (+3 more)
 
 ### Community 10 - "compilerOptions"
 Cohesion: 0.12
@@ -167,8 +169,8 @@ Cohesion: 0.50
 Nodes (3): builds, routes, version
 
 ### Community 20 - "AppError"
-Cohesion: 0.06
-Nodes (47): openai, getNextEmployeeCode(), validateQuery(), loginLimiter, validateBody(), validateBody(), validateBody(), validateBody() (+39 more)
+Cohesion: 0.12
+Nodes (26): getNextEmployeeCode(), audit(), createEmployee(), getEmployeeById(), updateEmployee(), updateMyProfile(), updateSalary(), createHoliday() (+18 more)
 
 ### Community 21 - "AGENTS.md — Secure, Fast App Development Playbook"
 Cohesion: 0.07
@@ -198,13 +200,13 @@ Nodes (3): Active Stubs, Graduated to Real Implementations (Slice A1, A2, A3 & A
 Cohesion: 0.15
 Nodes (13): 13. Attendance Corrections, 16. Audit Logs, 18. AI Assistant & Smart Leave, 1. Global Conventions & Protocols, 8. Leave Types & Quotas, `GET /api/v1/audit`, `GET /api/v1/corrections`, `GET /api/v1/leave-types` (+5 more)
 
-### Community 28 - "react"
-Cohesion: 0.06
-Nodes (65): extractErrorMessage(), http, NormalizedError, TOKEN_STORAGE_KEY, App(), AppRoutes(), queryClient, RoleRoute() (+57 more)
+### Community 28 - "index.ts"
+Cohesion: 0.08
+Nodes (24): ConfirmDialog(), ConfirmDialogProps, Column, DataTable(), DataTableProps, DateText(), DateTextProps, EmptyState() (+16 more)
 
-### Community 29 - "button.tsx"
-Cohesion: 0.33
-Nodes (5): Button(), buttonVariants, class-variance-authority, cn, radix-ui
+### Community 29 - "Dashboard.tsx"
+Cohesion: 0.20
+Nodes (25): STATUS_STYLES, StatusBadge(), StatusBadgeProps, Button(), buttonVariants, Card, CardContent(), CardDescription() (+17 more)
 
 ### Community 30 - "eslint.config.js"
 Cohesion: 0.33
@@ -228,19 +230,19 @@ Nodes (5): Component Specifications (shadcn/ui based), HCM Lite Design System, L
 
 ### Community 35 - "formatDate"
 Cohesion: 0.15
-Nodes (28): getEmployeeMetrics(), getHrMetrics(), checkIn(), checkOut(), getBoard(), getEmployeeMonth(), getMyMonth(), applyCorrection() (+20 more)
+Nodes (27): getEmployeeMetrics(), getHrMetrics(), checkIn(), checkOut(), getBoard(), getEmployeeMonth(), getMyMonth(), applyCorrection() (+19 more)
 
-### Community 36 - "cloudinary.mjs"
-Cohesion: 0.40
-Nodes (4): cloudinary, sharp, streamifier, uploadOnCloudinary()
+### Community 36 - "http.ts"
+Cohesion: 0.14
+Nodes (21): extractErrorMessage(), http, NormalizedError, TOKEN_STORAGE_KEY, RoleRoute(), RoleRouteProps, AuthContext, AuthContextType (+13 more)
 
-### Community 37 - "mongodb.mjs"
-Cohesion: 0.40
-Nodes (4): dotenv, connect_db(), envPath, serverDirectory
+### Community 37 - "App.tsx"
+Cohesion: 0.09
+Nodes (26): App(), AppRoutes(), queryClient, AppLayout(), Attendance(), formatTime(), unwrap(), AnnouncementsPage() (+18 more)
 
 ### Community 38 - "models/index.mjs"
-Cohesion: 0.07
-Nodes (47): bcryptjs, jsonwebtoken, mongoose, supertest, vitest, AILogModel, AILogSchema, AttendanceModel (+39 more)
+Cohesion: 0.11
+Nodes (21): mongoose, AttendanceModel, AttendanceSchema, CorrectionModel, CorrectionSchema, DepartmentSchema, DesignationModel, DesignationSchema (+13 more)
 
 ### Community 41 - "6. Organization Structure (Departments & Designations)"
 Cohesion: 0.22
@@ -278,17 +280,17 @@ Nodes (5): 9. Users Administration (HR Accounts & Credentials), `GET /api/v1/use
 Cohesion: 0.67
 Nodes (3): 15. Dashboard Analytics & Metrics, `GET /api/v1/analytics/hr`, `GET /api/v1/analytics/me`
 
-### Community 50 - "devDependencies"
-Cohesion: 0.40
-Nodes (5): devDependencies, nodemon, supertest, @types/bun, vitest
+### Community 50 - "setup.service.mjs"
+Cohesion: 0.22
+Nodes (13): bcryptjs, jsonwebtoken, supertest, vitest, AuditLogModel, AuditLogSchema, queryMutationMethods, UserModel (+5 more)
 
 ### Community 51 - "HCM Lite Frontend Spec"
 Cohesion: 0.50
 Nodes (3): Conventions, HCM Lite Frontend Spec, Slices (Build Order)
 
-### Community 52 - "scripts"
-Cohesion: 0.50
-Nodes (4): scripts, dev, start, test
+### Community 52 - "react"
+Cohesion: 0.25
+Nodes (10): NavItem, Sidebar(), SidebarProps, ThemeToggle(), TopBar(), TopBarProps, AiBadge(), AiBadgeProps (+2 more)
 
 ### Community 53 - "14. Payroll & PDF Payslips"
 Cohesion: 0.50
@@ -298,6 +300,10 @@ Nodes (4): 14. Payroll & PDF Payslips, `GET /api/v1/payroll`, `GET /api/v1/payro
 Cohesion: 0.50
 Nodes (4): 3. Authentication & Password Management, `POST /api/v1/auth/change-password`, `POST /api/v1/auth/login`, `PUT /api/v1/password`
 
+### Community 55 - "leave.service.mjs"
+Cohesion: 0.23
+Nodes (11): getHolidaysForRange(), applyLeave(), cancelLeave(), decideLeave(), getBalance(), getLeaveById(), getLeaves(), DEFAULT_LEAVE_TYPES (+3 more)
+
 ### Community 56 - "2. Setup & First-Run Initialization"
 Cohesion: 0.67
 Nodes (3): 2. Setup & First-Run Initialization, `GET /api/v1/setup/status`, `POST /api/v1/setup`
@@ -306,25 +312,41 @@ Nodes (3): 2. Setup & First-Run Initialization, `GET /api/v1/setup/status`, `POS
 Cohesion: 0.67
 Nodes (3): 5. Company Settings, `GET /api/v1/settings`, `PUT /api/v1/settings`
 
+### Community 58 - "notification.service.mjs"
+Cohesion: 0.22
+Nodes (5): AnnouncementModel, AnnouncementSchema, NotificationModel, NotificationSchema, markNotificationAsRead()
+
+### Community 59 - "vercel.json"
+Cohesion: 0.20
+Nodes (9): framework, root, rewrites, $schema, framework, root, services, client (+1 more)
+
+### Community 60 - "ai.service.mjs"
+Cohesion: 0.28
+Nodes (6): openai, AILogModel, AILogSchema, aiTools, getOpenAIClient(), processChat()
+
+### Community 61 - "Payroll"
+Cohesion: 0.67
+Nodes (3): currency(), Payroll(), unwrap()
+
 ## Knowledge Gaps
-- **486 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+481 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 522 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **478 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+473 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 515 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `Profile.tsx`, `client/package.json`, `button.tsx`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **Why does `AppError` connect `AppError` to `routes/index.mjs`, `formatDate`, `models/index.mjs`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `mongoose` connect `models/index.mjs` to `routes/index.mjs`, `server/package.json`, `formatDate`, `mongodb.mjs`, `AppError`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `Profile.tsx`, `client/package.json`, `http.ts`, `App.tsx`, `index.ts`, `Dashboard.tsx`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **Why does `AppError` connect `AppError` to `routes/index.mjs`, `formatDate`, `models/index.mjs`, `setup.service.mjs`, `leave.service.mjs`, `notification.service.mjs`, `ai.service.mjs`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `mongoose` connect `models/index.mjs` to `routes/index.mjs`, `server/package.json`, `formatDate`, `setup.service.mjs`, `AppError`, `leave.service.mjs`, `notification.service.mjs`, `ai.service.mjs`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **What connects `$schema`, `style`, `rsc` to the rest of the system?**
-  _486 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _478 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Profile.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.1268939393939394 - nodes in this community are weakly interconnected._
 - **Should `routes/index.mjs` be split into smaller, more focused modules?**
-  _Cohesion score 0.07792207792207792 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05828953655040611 - nodes in this community are weakly interconnected._
 - **Should `client/package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._

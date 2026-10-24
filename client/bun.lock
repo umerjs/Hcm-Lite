@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "mern-template",
+      "name": "hcm-lite",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
         "@hookform/resolvers": "^6.0.0",

@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import type { ApiError } from "../types/api";
+import { dispatchToast } from "../components/shared/Toast";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
@@ -65,19 +66,40 @@ http.interceptors.response.use(
     }
 
     const payload = error.response?.data;
+    const code =
+      (payload as ApiError)?.error?.code || (status ? `HTTP_${status}` : "NETWORK_ERROR");
+    const message =
+      (payload as ApiError)?.error?.message ||
+      (payload as { message?: string })?.message ||
+      error.message ||
+      "Request failed";
+
     const normalized: NormalizedError = {
-      code: (payload as ApiError)?.error?.code || (status ? `HTTP_${status}` : "NETWORK_ERROR"),
-      message:
-        (payload as ApiError)?.error?.message ||
-        (payload as { message?: string })?.message ||
-        error.message ||
-        "Request failed",
+      code,
+      message,
       fields: (payload as ApiError)?.error?.fields,
       status,
     };
 
     // Attach normalized error to the AxiosError object for easy consumption
     (error as any).normalizedError = normalized;
+
+    // Trigger toast notification using standard { error: { code, message } } format
+    // Skip silent check on initial /auth/me if unauthenticated
+    const isSilentAuthCheck =
+      error.config?.url?.includes("/auth/me") &&
+      status === 401 &&
+      !localStorage.getItem(TOKEN_STORAGE_KEY);
+    const skipToast = (error.config as any)?.skipToast;
+
+    if (!isSilentAuthCheck && !skipToast) {
+      dispatchToast({
+        error: {
+          code,
+          message,
+        },
+      });
+    }
 
     return Promise.reject(error);
   },

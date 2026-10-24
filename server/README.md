@@ -1,4 +1,4 @@
-# mern-template
+# hcm-lite
 
 To install dependencies:
 

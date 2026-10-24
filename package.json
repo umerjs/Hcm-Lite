@@ -1,12 +1,17 @@
 {
-  "name": "mern-template",
+  "name": "hcm-lite",
   "private": true,
   "version": "1.0.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
-    "install:all": "bun install --prefix server && bun install --prefix client",
-    "dev": "bun --prefix client run dev",
+    "install:all": "bun install",
+    "dev": "bun --parallel --filter '*' run dev",
     "format": "bunx prettier --write .",
-    "dev:server": "bun --prefix server run dev",
-    "build": "bun --prefix client run build"
+    "dev:client": "cd client && bun run dev",
+    "dev:server": "cd server && bun run dev",
+    "build": "cd client && bun run build"
   }
 }
