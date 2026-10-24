@@ -24,12 +24,6 @@
       }
     },
     {
-      "source": "/(.*\\.(?:ico|png|svg|jpg|jpeg|gif|webp|css|js|map|json|woff|woff2|ttf|eot|txt|xml))",
-      "destination": {
-        "service": "client"
-      }
-    },
-    {
       "source": "/(.*)",
       "destination": {
         "service": "client",

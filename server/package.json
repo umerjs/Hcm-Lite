@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "nodemon server.mjs",
+    "seed": "bun scripts/seedProduction.mjs",
     "test": "vitest run"
   },
   "keywords": [],
