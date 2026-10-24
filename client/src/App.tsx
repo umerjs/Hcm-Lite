@@ -19,6 +19,7 @@ import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
 import Leave from "./pages/Leave";
 import Payroll from "./pages/Payroll";
+import { AnnouncementsPage, AuditPage, NotificationsPage } from "./pages/CommsPages";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,11 +138,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="announcements"
           element={
-            <PlaceholderPage
-              title="Announcements"
-              description="Company-wide notices, policy broadcasts, and HR alerts."
-              slice="F8"
-            />
+            <AnnouncementsPage />
           }
         />
 
@@ -150,11 +147,7 @@ const AppRoutes: React.FC = () => {
           path="audit"
           element={
             <RoleRoute allowedRoles={["admin"]}>
-              <PlaceholderPage
-                title="Audit Trail"
-                description="System-wide security logs, actor tracking, and before/after mutation diffs."
-                slice="F8"
-              />
+<AuditPage />
             </RoleRoute>
           }
         />
@@ -163,11 +156,7 @@ const AppRoutes: React.FC = () => {
         <Route
           path="notifications"
           element={
-            <PlaceholderPage
-              title="Notifications"
-              description="Real-time alerts, approval requests, and announcement pings."
-              slice="F8"
-            />
+            <NotificationsPage />
           }
         />
 

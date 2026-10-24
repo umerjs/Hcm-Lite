@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, Bell, User as UserIcon, LogOut, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { http } from "../../api/http";
+import type { NotificationsResponse } from "../../types/api";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "./ThemeToggle";
 
@@ -17,6 +20,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const unreadNotifications = useQuery({ queryKey: ["notifications", "unread"], queryFn: async () => (await http.get<NotificationsResponse>("/notifications?unread=true")).data.data });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -74,9 +78,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="relative p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
         >
           <Bell className="w-5 h-5" />
-          {unreadNotificationsCount > 0 && (
+          {(unreadNotifications.data?.length ?? unreadNotificationsCount) > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
-              {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+              {(unreadNotifications.data?.length ?? unreadNotificationsCount) > 9 ? "9+" : (unreadNotifications.data?.length ?? unreadNotificationsCount)}
             </span>
           )}
         </Link>
