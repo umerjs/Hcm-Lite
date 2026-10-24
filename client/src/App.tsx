@@ -16,6 +16,8 @@ import ChangePassword from "./pages/ChangePassword";
 // Organization & Employee screens (Slice F2)
 import Organization from "./pages/Organization";
 import Employees from "./pages/Employees";
+import Attendance from "./pages/Attendance";
+import Leave from "./pages/Leave";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,13 +85,7 @@ const AppRoutes: React.FC = () => {
         {/* Attendance: All roles (Employee checkin/calendar; HR/Admin attendance board) */}
         <Route
           path="attendance"
-          element={
-            <PlaceholderPage
-              title="Attendance"
-              description="Geo-verified check-in, month calendar, daily rosters, and status audits."
-              slice="F3"
-            />
-          }
+          element={<Attendance />}
         />
 
         {/* Corrections Inbox: HR only */}
@@ -109,13 +105,7 @@ const AppRoutes: React.FC = () => {
         {/* Leave: All roles (Employee apply/balances; HR inbox; Admin read-only) */}
         <Route
           path="leave"
-          element={
-            <PlaceholderPage
-              title="Leave Management"
-              description="Balances, quota consumption, smart leave application, and approvals."
-              slice="F4"
-            />
-          }
+          element={<Leave />}
         />
 
         {/* Payroll: HR (draft/edit) & Admin (review/finalize) */}
