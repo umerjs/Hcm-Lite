@@ -113,13 +113,12 @@ async function seed() {
 
   // 5. Designations
   console.log("Seeding designations...");
-  const [desigEngLead, desigDev, desigHrLead, desigFinAnalyst] =
-    await DesignationModel.insertMany([
-      { name: "Senior Software Engineer", departmentId: deptEng._id },
-      { name: "Full Stack Developer", departmentId: deptEng._id },
-      { name: "HR Business Partner", departmentId: deptHr._id },
-      { name: "Financial Analyst", departmentId: deptFin._id },
-    ]);
+  const [desigEngLead, desigDev, desigHrLead, desigFinAnalyst] = await DesignationModel.insertMany([
+    { name: "Senior Software Engineer", departmentId: deptEng._id },
+    { name: "Full Stack Developer", departmentId: deptEng._id },
+    { name: "HR Business Partner", departmentId: deptHr._id },
+    { name: "Financial Analyst", departmentId: deptFin._id },
+  ]);
 
   // 6. Passwords
   const adminHash = await bcrypt.hash("AdminPassword123!", 10);
