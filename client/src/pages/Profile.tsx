@@ -64,8 +64,8 @@ const Profile = () => {
       if (!userId) {
         setUser(profileData);
       }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
+    } catch (_error) {
+      // Handled silently
     } finally {
       setProfileLoading(false);
     }

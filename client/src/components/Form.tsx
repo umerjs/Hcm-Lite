@@ -40,8 +40,8 @@ const Form = ({ getallposts }: FormProps) => {
 
       getallposts();
       form.reset();
-    } catch (error) {
-      console.error("Error creating post:", error);
+    } catch (_error) {
+      // Handled silently
     }
   };
 

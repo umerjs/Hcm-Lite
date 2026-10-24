@@ -32,9 +32,9 @@ export const AppLayout: React.FC = () => {
         type="button"
         onClick={() => setAiDrawerOpen(true)}
         aria-label="Open AI Assistant"
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-emerald-600 text-white shadow-xl hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-emerald-600 text-white shadow-xl hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
       >
-        <Sparkles className="w-5 h-5 animate-pulse text-amber-300" />
+        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-amber-300" />
         <span className="text-xs font-bold tracking-wide">Ask Assistant</span>
       </button>
 
@@ -45,4 +45,3 @@ export const AppLayout: React.FC = () => {
 };
 
 export default AppLayout;
-
