@@ -37,7 +37,11 @@ export default function Payroll() {
   });
 
   const run = Array.isArray(payroll.data) ? payroll.data[0] : payroll.data;
-  const rows: PayrollItem[] = run?.items ?? [];
+  const rawPayroll = payroll.data;
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const rows: PayrollItem[] = Array.isArray(rawPayroll)
+    ? rawPayroll
+    : (rawPayroll as any)?.items || (rawPayroll as any)?.data || [];
   const payslipList: Payslip[] = payslips.data ?? [];
 
   const downloadPdf = async (employeeId: string, month: string) => {
@@ -45,11 +49,17 @@ export default function Payroll() {
       const response = await http.get(`/payroll/${employeeId}/month/${month}/pdf`, {
         responseType: "blob",
       });
-      const url = URL.createObjectURL(response.data);
-      window.open(url, "_blank", "noopener,noreferrer");
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `payslip-${employeeId}-${month}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      alert("Unable to generate payslip PDF. Ensure the payroll run is approved.");
+      alert("Unable to generate payslip PDF. Ensure the employee has active payroll calculations.");
     }
   };
 
@@ -108,31 +118,47 @@ export default function Payroll() {
                     <TableHead className="text-right">Deductions & Tax</TableHead>
                     <TableHead className="text-right">Net Pay</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Payslip</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row) => (
-                    <TableRow key={row.employeeId}>
-                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
-                        {row.employeeName}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums text-xs sm:text-sm">
-                        {currency(row.basic)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums text-xs sm:text-sm">
-                        {currency(row.gross)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums text-muted-foreground text-xs sm:text-sm">
-                        {currency(row.deductions + row.tax)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-semibold tabular-nums text-xs sm:text-sm">
-                        {currency(row.net)}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status="active" label="Calculated" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {rows.map((row: any) => {
+                    const empId = row.employeeId || row.employee?._id || row._id;
+                    const empName = row.employeeName || row.employee?.name || "Employee";
+                    const rowMonth = row.month || currentMonth;
+                    return (
+                      <TableRow key={empId}>
+                        <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                          {empName}
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums text-xs sm:text-sm">
+                          {currency(row.basic)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums text-xs sm:text-sm">
+                          {currency(row.gross)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums text-muted-foreground text-xs sm:text-sm">
+                          {currency(row.deductions + row.tax)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold tabular-nums text-xs sm:text-sm">
+                          {currency(row.net)}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status="active" label="Calculated" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                            onClick={() => downloadPdf(empId, rowMonth)}
+                          >
+                            <Download className="size-3.5" /> PDF
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

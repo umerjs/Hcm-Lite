@@ -325,8 +325,17 @@ export interface SetSalaryRequest {
 
 export interface PayrollItem {
   employeeId: string;
-  employeeName: string;
-  employeeCode: string;
+  employeeName?: string;
+  employeeCode?: string;
+  employee?: {
+    _id?: string;
+    code?: string;
+    name?: string;
+    email?: string;
+    department?: string;
+    designation?: string;
+  };
+  month?: string;
   departmentName?: string;
   basic: number;
   hra: number;
@@ -339,7 +348,10 @@ export interface PayrollItem {
   halfDays: number;
   deductions: number;
   tax: number;
+  monthlyTax?: number;
   net: number;
+  penalty?: number;
+  lateCount?: number;
 }
 
 export interface PayrollRun {
@@ -601,18 +613,4 @@ export interface AnnouncementsResponse {
 
 export interface NotificationsResponse {
   data: Notification[];
-}
-
-// ── AI Chat Module ───────────────────────────────────────────────────────────
-
-export interface AiChatRequest {
-  message: string;
-}
-
-export interface AiChatResponse {
-  response: string;
-  message?: string;
-  toolsUsed?: string[];
-  tokens?: number;
-  logId?: string;
 }

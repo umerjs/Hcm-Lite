@@ -1,5 +1,5 @@
 {
-  "name": "hcm-lite",
+  "name": "hcm-lite-backend",
   "version": "1.0.0",
   "description": "",
   "main": "server.mjs",
