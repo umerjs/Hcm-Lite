@@ -22,8 +22,8 @@ const Navbar = () => {
             <FiBarChart2 className="h-5 w-5" />
           </span>
 
-         <Link to="/">
-             <span className="text-lg font-bold text-gray-800">MERN Template</span>
+          <Link to="/">
+            <span className="text-lg font-bold text-gray-800">MERN Template</span>
           </Link>
         </div>
 
@@ -55,9 +55,7 @@ const Navbar = () => {
                 {user?.firstname} {user?.lastname}
               </span>
 
-              {user?.username && (
-                <span className="text-xs text-blue-500">@{user.username}</span>
-              )}
+              {user?.username && <span className="text-xs text-blue-500">@{user.username}</span>}
             </div>
           </button>
 

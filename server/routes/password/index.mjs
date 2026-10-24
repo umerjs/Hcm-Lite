@@ -1,53 +1,46 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import { UserModel } from "../../models/index.mjs";
-import { authGuard } from "../../middlewares/index.mjs";
+import { requireAuth } from "../../middlewares/index.mjs";
+import { AppError, asyncHandler } from "../../utils/errors.mjs";
 
 const router = express.Router();
 
-router.put("/password", authGuard, async (req, res) => {
-  try {
+// PUT /api/v1/password — change password for the authenticated user.
+// mustChangePassword users are allowed here (they need this route to unblock themselves).
+router.put(
+  "/password",
+  requireAuth,
+  asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).send({
-        message: "Current password and new password are required",
+      throw new AppError(400, "VALIDATION_ERROR", "currentPassword and newPassword are required", {
+        currentPassword: !currentPassword ? "Required" : undefined,
+        newPassword: !newPassword ? "Required" : undefined,
+      });
+    }
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      throw new AppError(400, "VALIDATION_ERROR", "New password must be at least 8 characters", {
+        newPassword: "Too short",
       });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).send({
-        message: "New password must be at least 6 characters",
-      });
-    }
+    // Re-fetch user with password for comparison
+    const user = await UserModel.findById(req.user._id).select("+password");
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      req.current_user.password,
-    );
-
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid) {
-      return res.status(400).send({
-        message: "Invalid current password",
-      });
+      throw new AppError(401, "INVALID_CREDENTIALS", "Current password is incorrect");
     }
 
-    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.mustChangePassword = false;
+    await user.save();
 
-    await UserModel.findByIdAndUpdate(req.current_user._id, {
-      password: newPasswordHash,
-    });
-
-    return res.status(200).send({
-      message: "Password updated successfully",
-    });
-  } catch (error) {
-    console.error(error);
-
-    return res.status(500).send({
-      message: "Internal Server Error",
-    });
-  }
-});
+    return res.status(200).json({ message: "Password updated successfully" });
+  }),
+);
 
 export default router;

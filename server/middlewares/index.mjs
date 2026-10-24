@@ -1,1 +1,1 @@
-export { authGuard } from "./jwt/index.mjs";
+export { authGuard, requireAuth, requireRole } from "./jwt/index.mjs";

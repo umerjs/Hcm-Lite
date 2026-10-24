@@ -1,118 +1,159 @@
-import { useState } from "react";
-import PasswordInput from "../components/PasswordInput";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { BackendUrl } from "../core";
-import { store } from "../store/states";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { http, extractErrorMessage } from "../api/http";
+import { useAuth } from "../context/AuthContext";
+import type { LoginResponse } from "../types/api";
 
-const Login = () => {
-  const { login } = store();
+export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, mustChangePassword, isSetup } = useAuth();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [infoMsg, setInfoMsg] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    // If arriving from setup with message / prefilled email
+    if (location.state?.message) {
+      setInfoMsg(location.state.message);
+    }
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+
+    // If already authenticated and password is not forced to change
+    if (isAuthenticated) {
+      if (mustChangePassword) {
+        navigate("/change-password", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [isAuthenticated, mustChangePassword, navigate, location.state]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMsg("");
 
     if (!email.trim()) {
-      alert("Email is required");
+      setErrorMsg("Email is required");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      alert("Enter a valid email address");
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg("Please enter a valid email address");
       return;
     }
 
     if (!password) {
-      alert("Password is required");
+      setErrorMsg("Password is required");
       return;
     }
 
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters");
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      const response = await axios.post(`${BackendUrl}/api/v1/auth/login`, {
-        email: email.trim(),
+      const response = await http.post<LoginResponse>("/auth/login", {
+        email: email.trim().toLowerCase(),
         password,
       });
 
-      alert("Login Done");
-      localStorage.setItem("token", response.data.token);
-      login(response.data.user);
-      navigate("/");
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Login failed");
+      const { token, user } = response.data;
+      login(token, user);
+
+      // Rule 3: Forced change-password redirect
+      if (user.mustChangePassword) {
+        navigate("/change-password", { replace: true });
       } else {
-        alert("Something went wrong");
+        const destination = location.state?.from?.pathname || "/dashboard";
+        navigate(destination, { replace: true });
       }
+    } catch (error: unknown) {
+      setErrorMsg(extractErrorMessage(error, "Invalid email or password"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center justify-center">
-        <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Welcome back
+    <div className="min-h-screen bg-background text-foreground px-4 py-12 flex items-center justify-center">
+      <div className="w-full max-w-md">
+        <div className="bg-card border border-border p-6 sm:p-8 rounded-2xl shadow-xl">
+          <div className="mb-6 text-center">
+            <div className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center mx-auto mb-3 font-bold text-xl shadow-sm">
+              H
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Sign In to HCM Lite
             </h1>
-
-            <p className="mt-2 text-sm text-slate-500">
-              Login to continue to your account
+            <p className="text-xs text-muted-foreground mt-1">
+              Access your organizational portal and employee workspace
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Input
-              placeholder="Enter email"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          {infoMsg && (
+            <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+              {infoMsg}
+            </div>
+          )}
 
-            <PasswordInput
-              placeholder="Enter password"
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+          {errorMsg && (
+            <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium">
+              {errorMsg}
+            </div>
+          )}
 
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
-              >
-                Forgot password?
-              </Link>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">
+                Work Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                autoComplete="email"
+                className="w-full h-10 px-3 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+              />
             </div>
 
-            <Button className="bg-blue-500 rounded-sm w-full h-10 flex justify-center items-center text-white cursor-pointer hover:bg-blue-600">
-              Login
-            </Button>
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                autoComplete="current-password"
+                className="w-full h-10 px-3 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 mt-2 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center shadow-sm"
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </button>
           </form>
 
-          <div className="mt-6 border-t border-slate-100 pt-6 text-center">
-            <p className="text-sm text-slate-500">
-              Don't have an account?{" "}
-              <Link
-                className="font-medium text-blue-600 transition-colors hover:text-blue-700"
-                to="/signup"
-              >
-                Signup
-              </Link>
-            </p>
-          </div>
+          {isSetup === false && (
+            <div className="mt-6 pt-5 border-t border-border text-center">
+              <p className="text-xs text-muted-foreground">
+                First time booting up?{" "}
+                <Link to="/setup" className="font-semibold text-primary hover:underline">
+                  Run First-Time Setup
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

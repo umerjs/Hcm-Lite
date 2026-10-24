@@ -89,9 +89,7 @@ const ForgotPassword = () => {
               </svg>
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Change Password
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Change Password</h1>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Update your password to keep your account secure.
@@ -122,8 +120,8 @@ const ForgotPassword = () => {
 
             <div className="rounded-lg bg-slate-50 px-4 py-3">
               <p className="text-xs leading-5 text-slate-500">
-                Your new password must be at least 6 characters long and
-                different from your current password.
+                Your new password must be at least 6 characters long and different from your current
+                password.
               </p>
             </div>
 

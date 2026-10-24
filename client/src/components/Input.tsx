@@ -6,18 +6,10 @@ interface ButtonProps {
   value?: string | number;
   label?: string;
 }
-const Input = ({
-  placeholder,
-  type = "text",
-  onChange,
-  value,
-  label,
-}: ButtonProps) => {
+const Input = ({ placeholder, type = "text", onChange, value, label }: ButtonProps) => {
   return (
     <div className="flex flex-col">
-      <label className="mb-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-medium text-gray-700">{label}</label>
       <input
         type={type}
         placeholder={placeholder}

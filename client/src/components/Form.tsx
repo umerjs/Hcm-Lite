@@ -47,18 +47,11 @@ const Form = ({ getallposts }: FormProps) => {
 
   return (
     <div className="flex items-center justify-center bg-gray-100 px-4 py-10">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl"
-      >
-        <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">
-          Create Post
-        </h2>
+      <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-xl">
+        <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">Create Post</h2>
 
         <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Title
-          </label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Title</label>
           <input
             ref={titleRef}
             type="text"
@@ -86,9 +79,7 @@ const Form = ({ getallposts }: FormProps) => {
         </div>
 
         <div className="mb-6">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Description
-          </label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">Description</label>
           <textarea
             ref={descriptionRef}
             placeholder="Enter Your description here..."

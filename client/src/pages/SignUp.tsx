@@ -90,13 +90,9 @@ const Signup = () => {
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center justify-center">
         <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Create an account
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Create an account</h1>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Sign up to get started with your account
-            </p>
+            <p className="mt-2 text-sm text-slate-500">Sign up to get started with your account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">

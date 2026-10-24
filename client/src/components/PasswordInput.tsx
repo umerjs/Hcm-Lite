@@ -19,9 +19,7 @@ const PasswordInput = ({
 
   return (
     <div className="flex flex-col">
-      <label className="mb-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -36,11 +34,7 @@ const PasswordInput = ({
           aria-label={show ? "Hide password" : "Show password"}
           className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-stone-400 transition-colors hover:text-ink"
         >
-          {show ? (
-            <FiEyeOff className="h-4.5 w-4.5" />
-          ) : (
-            <FiEye className="h-4.5 w-4.5" />
-          )}
+          {show ? <FiEyeOff className="h-4.5 w-4.5" /> : <FiEye className="h-4.5 w-4.5" />}
         </button>
       </div>
     </div>

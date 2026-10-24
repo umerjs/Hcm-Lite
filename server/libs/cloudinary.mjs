@@ -9,11 +9,7 @@ cloudinary.config({
   secure: true,
 });
 
-export const uploadOnCloudinary = async (
-  file,
-  folder = "avatars",
-  publicId = null,
-) => {
+export const uploadOnCloudinary = async (file, folder = "avatars", publicId = null) => {
   if (!file?.buffer) {
     throw new Error("A file buffer is required for Cloudinary upload");
   }
@@ -48,16 +44,13 @@ export const uploadOnCloudinary = async (
   }
 
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      uploadOptions,
-      (error, result) => {
-        if (error) {
-          return reject(error);
-        }
+    const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+      if (error) {
+        return reject(error);
+      }
 
-        resolve(result);
-      },
-    );
+      resolve(result);
+    });
 
     streamifier.createReadStream(resizedBuffer).pipe(stream);
   });

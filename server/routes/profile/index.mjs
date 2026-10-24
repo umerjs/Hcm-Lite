@@ -1,159 +1,95 @@
 import express from "express";
 import { UserModel } from "../../models/index.mjs";
-import { authGuard } from "../../middlewares/index.mjs";
+import { requireAuth } from "../../middlewares/index.mjs";
 import { uploadOnCloudinary } from "../../libs/cloudinary.mjs";
-import { multerMiddleware, handleMulterError } from "../../libs/multer.mjs";
+import { handleMulterError } from "../../libs/multer.mjs";
+import { AppError, asyncHandler } from "../../utils/errors.mjs";
 
 const router = express.Router();
 
-router.use(authGuard);
+// All profile routes require auth — applied per-route so unmatched paths fall through to 404
+const auth = requireAuth;
 
-// GET PROFILE
-router.get("/profile", async (req, res) => {
-  try {
-    return res.status(200).send({
-      message: "Profile Fetched",
-      data: req.current_user,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({
-      message: "Avatar upload failed",
-      error: error.message,
-    });
-  }
-});
-router.get("/profile/:userId", async (req, res) => {
-  try {
-    const userId = req.params.userId || req.current_user._id;
-    const user = await UserModel.findById({ _id: userId });
+// GET /api/v1/profile — own profile
+router.get(
+  "/profile",
+  auth,
+  asyncHandler(async (req, res) => {
+    const user = await UserModel.findById(req.user._id);
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+    return res.status(200).json({ data: user });
+  }),
+);
 
-    if (!user) {
-      return res.status(404).send({
-        message: "User not found",
-      });
-    }
+// GET /api/v1/profile/:userId — another user's profile (any authenticated user)
+router.get(
+  "/profile/:userId",
+  auth,
+  asyncHandler(async (req, res) => {
+    const user = await UserModel.findById(req.params.userId);
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+    return res.status(200).json({ data: user });
+  }),
+);
 
-    return res.status(200).send({
-      message: "Other Profile Fetched",
-      data: user,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({
-      message: "Avatar upload failed",
-      error: error.message,
-    });
-  }
-});
-
-router.put("/profile", async (req, res) => {
-  try {
+// PUT /api/v1/profile — update own profile
+router.put(
+  "/profile",
+  auth,
+  asyncHandler(async (req, res) => {
     const { firstname, lastname, username } = req.body;
-    const user = await UserModel.findById(req.current_user._id);
+    const user = await UserModel.findById(req.user._id);
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
-
-    if (firstname) user.firstname = firstname;
-    if (lastname) user.lastname = lastname;
+    if (firstname) user.firstname = firstname.trim();
+    if (lastname) user.lastname = lastname.trim();
 
     if (username !== undefined) {
-      const trimmedUsername = username?.trim();
+      const trimmed = username?.trim();
+      if (!trimmed) throw new AppError(400, "VALIDATION_ERROR", "Username cannot be empty");
 
-      if (!trimmedUsername) {
-        return res.status(400).send({ message: "Username cannot be empty" });
-      }
+      const conflict = await UserModel.findOne({ username: trimmed, _id: { $ne: user._id } });
+      if (conflict) throw new AppError(409, "CONFLICT", "Username already taken");
 
-      const existingUsername = await UserModel.findOne({
-        username: trimmedUsername,
-        _id: { $ne: user._id },
-      });
-
-      if (existingUsername) {
-        return res.status(400).send({ message: "Username already taken" });
-      }
-
-      user.username = trimmedUsername;
+      user.username = trimmed;
     }
 
     await user.save();
+    return res.status(200).json({ message: "Profile updated", data: user });
+  }),
+);
 
-    return res.status(200).send({ message: "Profile Updated", data: user });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ message: "Internal Server Error" });
-  }
-});
-// UPDATE AVATAR
+// PUT /api/v1/profile/avatar — upload avatar to Cloudinary
 router.put(
   "/profile/avatar",
+  auth,
   handleMulterError("avatar"),
-  async (req, res) => {
-    try {
-      const file = req.file;
+  asyncHandler(async (req, res) => {
+    const file = req.file;
+    if (!file) throw new AppError(400, "VALIDATION_ERROR", "No file uploaded");
+    if (!file.mimetype.startsWith("image/"))
+      throw new AppError(400, "VALIDATION_ERROR", "Only image files are allowed");
 
-      if (!file) {
-        return res.status(400).send({
-          message: "No file uploaded",
-        });
-      }
+    const user = await UserModel.findById(req.user._id);
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
-      if (!file.mimetype.startsWith("image/")) {
-        return res.status(400).send({
-          message: "Only images are allowed",
-        });
-      }
+    const result = await uploadOnCloudinary(file);
+    user.profileimg = result.secure_url;
+    await user.save();
 
-      const user = await UserModel.findById(req.current_user._id);
-
-      if (!user) {
-        return res.status(404).send({
-          message: "User not found",
-        });
-      }
-
-      const result = await uploadOnCloudinary(file);
-
-      user.profileimg = result.secure_url;
-
-      await user.save();
-
-      return res.status(200).send({
-        message: "Avatar Updated",
-        data: user,
-      });
-    } catch (error) {
-      console.error(error);
-
-      return res.status(500).send({
-        message: "Internal Server Error",
-      });
-    }
-  },
+    return res.status(200).json({ message: "Avatar updated", data: user });
+  }),
 );
-router.delete("/profile", async (req, res) => {
-  try {
-    const user = await UserModel.findById({ _id: req.current_user._id });
 
-    if (!user) {
-      return res.status(404).send({
-        message: "User not found",
-      });
-    }
-
-    await UserModel.findByIdAndDelete(req.current_user._id);
-
-    return res.status(200).send({
-      message: "Profile deleted",
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({
-      message: "Internal Server Error",
-    });
-  }
-});
+// DELETE /api/v1/profile — delete own account
+router.delete(
+  "/profile",
+  auth,
+  asyncHandler(async (req, res) => {
+    const user = await UserModel.findByIdAndDelete(req.user._id);
+    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+    return res.status(200).json({ message: "Profile deleted" });
+  }),
+);
 
 export default router;

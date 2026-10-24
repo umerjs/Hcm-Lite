@@ -1,5 +1,17 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const serverDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const envPath = [".env.local", ".env"]
+  .map((fileName) => resolve(serverDirectory, fileName))
+  .find((filePath) => existsSync(filePath));
+
+if (envPath) {
+  dotenv.config({ path: envPath });
+}
 
 const uri = process.env.MONGODB_URI;
 
@@ -10,7 +22,7 @@ export const connect_db = async () => {
 
   try {
     await mongoose.connect(uri, {
-      dbName: "mongodb-auth-crud",
+      dbName: process.env.DB_NAME || "hcm-lite",
     });
 
     console.log("Mongoose connected successfully");

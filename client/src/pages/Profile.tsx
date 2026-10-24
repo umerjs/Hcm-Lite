@@ -15,8 +15,7 @@ const Profile = () => {
   const { setUser, user } = store();
 
   const [profileUser, setProfileUser] = useState<User | null>(null);
-  const isOwnProfile =
-    !userId || (!!profileUser && profileUser._id === user?._id);
+  const isOwnProfile = !userId || (!!profileUser && profileUser._id === user?._id);
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [username, setUsername] = useState("");
@@ -126,11 +125,9 @@ const Profile = () => {
     setAvatarLoading(true);
 
     try {
-      const response = await axios.put(
-        `${BackendUrl}/api/v1/profile/avatar`,
-        formData,
-        { headers: { authorizedtoken: localStorage.getItem("token") } },
-      );
+      const response = await axios.put(`${BackendUrl}/api/v1/profile/avatar`, formData, {
+        headers: { authorizedtoken: localStorage.getItem("token") },
+      });
       const updatedUser: User = response.data.data;
       setProfileUser(updatedUser);
       setUser(updatedUser);
@@ -188,9 +185,7 @@ const Profile = () => {
                       }}
                     />
                   ) : (
-                    <span className="text-white font-bold text-3xl uppercase">
-                      {initial}
-                    </span>
+                    <span className="text-white font-bold text-3xl uppercase">{initial}</span>
                   )}
                 </div>
 
@@ -267,23 +262,11 @@ const Profile = () => {
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <ProfileInfoItem
-                    label="Firstname"
-                    value={profileUser?.firstname || "-"}
-                  />
-                  <ProfileInfoItem
-                    label="Lastname"
-                    value={profileUser?.lastname || "-"}
-                  />
+                  <ProfileInfoItem label="Firstname" value={profileUser?.firstname || "-"} />
+                  <ProfileInfoItem label="Lastname" value={profileUser?.lastname || "-"} />
                 </div>
-                <ProfileInfoItem
-                  label="Username"
-                  value={`@${profileUser?.username || "-"}`}
-                />
-                <ProfileInfoItem
-                  label="Email"
-                  value={profileUser?.email || "-"}
-                />
+                <ProfileInfoItem label="Username" value={`@${profileUser?.username || "-"}`} />
+                <ProfileInfoItem label="Email" value={profileUser?.email || "-"} />
                 {isOwnProfile && (
                   <Button
                     type="button"
