@@ -18,16 +18,20 @@ export interface ToastItem {
   duration?: number;
 }
 
-type ToastInput =
-  | ApiErrorShape
-  | {
-      id?: string;
-      type?: "error" | "success" | "info" | "warning";
-      code?: string;
-      title?: string;
-      message: string;
-      duration?: number;
-    };
+export interface CustomToastInput {
+  id?: string;
+  type?: "error" | "success" | "info" | "warning";
+  code?: string;
+  title?: string;
+  message: string;
+  duration?: number;
+}
+
+export type ToastInput = ApiErrorShape | CustomToastInput;
+
+function isApiError(input: ToastInput): input is ApiErrorShape {
+  return "error" in input && typeof input.error === "object" && input.error !== null;
+}
 
 const TOAST_EVENT = "hcm:toast";
 
@@ -39,8 +43,9 @@ export function dispatchToast(input: ToastInput) {
   if (typeof window === "undefined") return;
 
   let toastData: Partial<ToastItem>;
+  let customId: string | undefined;
 
-  if ("error" in input && input.error) {
+  if (isApiError(input)) {
     toastData = {
       type: "error",
       code: input.error.code,
@@ -48,6 +53,7 @@ export function dispatchToast(input: ToastInput) {
       message: input.error.message || "An error occurred",
     };
   } else {
+    customId = input.id;
     toastData = {
       type: input.type || "info",
       code: input.code,
@@ -60,7 +66,7 @@ export function dispatchToast(input: ToastInput) {
   window.dispatchEvent(
     new CustomEvent(TOAST_EVENT, {
       detail: {
-        id: (input as any).id || Math.random().toString(36).substring(2, 9),
+        id: customId || Math.random().toString(36).substring(2, 9),
         ...toastData,
       },
     }),

@@ -463,9 +463,14 @@ export interface AiChatRequest {
 }
 
 export interface AiChatResponse {
-  answer: string;
-  aiGenerated: true;
+  response: string;
+  message?: string;
+  answer?: string;
+  aiGenerated?: boolean;
+  toolsUsed?: string[];
   toolCalls?: string[];
+  tokens?: number;
+  logId?: string;
 }
 
 export interface AiSummaryRequest {
