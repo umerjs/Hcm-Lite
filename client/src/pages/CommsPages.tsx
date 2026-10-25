@@ -206,9 +206,7 @@ export function AuditPage() {
         </CardHeader>
         <CardContent>
           {audit.isLoading ? (
-            <div className="py-12">
-              <Loading text="Loading audit log..." />
-            </div>
+            <Loading type="table" rows={6} columns={4} />
           ) : auditList.length === 0 ? (
             <EmptyState
               title="No audit events found"

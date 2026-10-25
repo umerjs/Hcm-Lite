@@ -186,8 +186,8 @@ Format: { "type": "annual" | "sick" | "casual" | "unpaid", "startDate": "YYYY-MM
       {/* Quota Balances Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {balances.isLoading ? (
-          <div className="col-span-full py-8">
-            <Loading text="Loading leave balances..." />
+          <div className="col-span-full">
+            <Loading type="cards" rows={3} />
           </div>
         ) : (
           balanceRows.map((balance) => (
@@ -418,8 +418,8 @@ Format: { "type": "annual" | "sick" | "casual" | "unpaid", "startDate": "YYYY-MM
           </CardHeader>
           <CardContent className="p-0 sm:p-6 sm:pt-0">
             {history.isLoading ? (
-              <div className="py-12">
-                <Loading text="Loading leave history..." />
+              <div className="p-4 sm:p-0">
+                <Loading type="table" rows={4} columns={5} />
               </div>
             ) : historyRows.length === 0 ? (
               <div className="p-6">

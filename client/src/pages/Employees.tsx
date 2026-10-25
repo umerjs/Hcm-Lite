@@ -200,9 +200,7 @@ export default function Employees() {
         </CardHeader>
         <CardContent>
           {employeesQuery.isLoading ? (
-            <div className="py-12">
-              <Loading text="Loading employee directory..." />
-            </div>
+            <Loading type="table" rows={6} columns={5} />
           ) : visibleEmployees.length === 0 ? (
             <EmptyState
               title="No employees found"

@@ -182,9 +182,7 @@ export default function Attendance() {
           </CardHeader>
           <CardContent>
             {boardQuery.isLoading ? (
-              <div className="py-8">
-                <Loading text="Loading daily board..." />
-              </div>
+              <Loading type="table" rows={4} columns={4} />
             ) : board.length === 0 ? (
               <EmptyState
                 title="No attendance records"
@@ -239,9 +237,7 @@ export default function Attendance() {
         </CardHeader>
         <CardContent>
           {summaryQuery.isLoading ? (
-            <div className="py-8">
-              <Loading text="Loading attendance history..." />
-            </div>
+            <Loading type="table" rows={4} columns={5} />
           ) : historyList.length === 0 ? (
             <EmptyState
               title="No history recorded"

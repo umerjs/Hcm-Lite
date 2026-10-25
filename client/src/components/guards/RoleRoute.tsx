@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Loading from "../shared/Loading";
-import ErrorState from "../shared/ErrorState";
+import Unauthorized from "../../pages/Unauthorized";
 import type { UserRole } from "../../types/api";
 
 interface RoleRouteProps {
@@ -35,14 +35,7 @@ export const RoleRoute: React.FC<RoleRouteProps> = ({ children, allowedRoles }) 
 
   // 4. Role restriction
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <ErrorState
-          title="Access Forbidden (403)"
-          message={`Your current role (${role.toUpperCase()}) does not have permission to view this section.`}
-        />
-      </div>
-    );
+    return <Unauthorized requiredRole={allowedRoles.join(" or ").toUpperCase()} />;
   }
 
   return <>{children}</>;

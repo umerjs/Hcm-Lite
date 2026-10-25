@@ -97,8 +97,8 @@ export default function Payroll() {
         </CardHeader>
         <CardContent className="p-0">
           {payroll.isLoading ? (
-            <div className="py-12">
-              <Loading text="Loading payroll calculations..." />
+            <div className="p-4 sm:p-6">
+              <Loading type="table" rows={5} columns={6} />
             </div>
           ) : rows.length === 0 ? (
             <div className="p-6">
@@ -183,8 +183,8 @@ export default function Payroll() {
         </CardHeader>
         <CardContent className="p-0">
           {payslips.isLoading ? (
-            <div className="py-8">
-              <Loading text="Loading payslips..." />
+            <div className="p-4 sm:p-6">
+              <Loading type="table" rows={4} columns={5} />
             </div>
           ) : payslipList.length === 0 ? (
             <div className="p-6">

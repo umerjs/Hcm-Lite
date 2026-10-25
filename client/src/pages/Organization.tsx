@@ -164,9 +164,7 @@ export default function Organization() {
           </CardHeader>
           <CardContent>
             {departmentsQuery.isLoading ? (
-              <div className="py-8">
-                <Loading text="Loading departments..." />
-              </div>
+              <Loading type="table" rows={4} columns={3} />
             ) : departments.length === 0 ? (
               <EmptyState
                 title="No departments found"
