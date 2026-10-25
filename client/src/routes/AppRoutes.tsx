@@ -25,6 +25,7 @@ import {
   CommsModule,
   AuditModule,
   NotificationsModule,
+  ProfilePage,
 } from "./routesConfig";
 
 export const AppRoutes: React.FC = () => {
@@ -224,11 +225,7 @@ export const AppRoutes: React.FC = () => {
             path="profile"
             element={
               <Suspense fallback={<PageSkeleton title tableRows={4} />}>
-                <PlaceholderPage
-                  title="My Profile"
-                  description="Personal credentials, contact details, and assigned workstation."
-                  slice="F8"
-                />
+                <ProfilePage />
               </Suspense>
             }
           />
