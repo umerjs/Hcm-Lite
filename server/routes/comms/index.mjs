@@ -72,6 +72,7 @@ router.get(
     const unreadOnly = req.query.unread === "true";
     const notifications = await notificationService.getNotifications(req.user._id, {
       unreadOnly,
+      companyId: req.user.companyId,
     });
     return res.status(200).json({ data: notifications });
   }),
@@ -88,6 +89,7 @@ router.patch(
     const notification = await notificationService.markNotificationAsRead(
       req.params.id,
       req.user._id,
+      req.user.companyId,
     );
     return res.status(200).json({ message: "Notification marked as read", data: notification });
   }),
@@ -101,7 +103,10 @@ router.patch(
   "/notifications/read-all",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const result = await notificationService.markAllNotificationsAsRead(req.user._id);
+    const result = await notificationService.markAllNotificationsAsRead(
+      req.user._id,
+      req.user.companyId,
+    );
     return res.status(200).json(result);
   }),
 );

@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 
 const SettingsSchema = new mongoose.Schema(
   {
-    _id: {
-      type: String,
-      default: "company_settings",
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
     },
     companyName: {
       type: String,
@@ -50,5 +51,7 @@ const SettingsSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+SettingsSchema.index({ companyId: 1 }, { unique: true });
 
 export const SettingsModel = mongoose.models.settings || mongoose.model("settings", SettingsSchema);

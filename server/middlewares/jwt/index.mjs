@@ -30,13 +30,19 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
     throw new AppError(401, "INVALID_TOKEN", "Invalid token");
   }
 
-  if (!decoded._id) {
+  const userId = decoded._id || decoded.id;
+  if (!userId) {
     throw new AppError(401, "INVALID_TOKEN", "Invalid token payload");
   }
 
+  // Enforce tenant scoping: companyId is required in token payload
+  if (!decoded.companyId) {
+    throw new AppError(401, "UNAUTHENTICATED", "Token missing tenant context (companyId)");
+  }
+
   // 3. Load user (password intentionally excluded)
-  const user = await UserModel.findById(decoded._id).select(
-    "_id email role employeeId isActive mustChangePassword",
+  const user = await UserModel.findById(userId).select(
+    "_id email role employeeId isActive mustChangePassword companyId",
   );
 
   if (!user) {
@@ -49,6 +55,13 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   }
 
   req.user = user;
+  req.user.companyId = user.companyId || decoded.companyId;
+  req.companyId = req.user.companyId;
+
+  if (!req.user.companyId) {
+    throw new AppError(401, "UNAUTHENTICATED", "User has no tenant association");
+  }
+
   next();
 });
 

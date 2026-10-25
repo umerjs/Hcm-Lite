@@ -2,13 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, UserRound, X, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
   Table,
   TableBody,
@@ -31,7 +25,9 @@ import type {
 
 type RegisterForm = CreateEmployeeRequest;
 const unwrap = <T,>(value: T | { data: T }): T =>
-  (typeof value === "object" && value !== null && "data" in value ? (value as any).data : value) as T;
+  (typeof value === "object" && value !== null && "data" in value
+    ? (value as any).data
+    : value) as T;
 
 export default function Employees() {
   const queryClient = useQueryClient();
@@ -75,13 +71,17 @@ export default function Employees() {
     queryKey: ["departments"],
     queryFn: async () =>
       unwrap<Department[]>(
-        await http.get<Department[] | { data: Department[] }>("/departments").then((response) => response.data),
+        await http
+          .get<Department[] | { data: Department[] }>("/departments")
+          .then((response) => response.data),
       ),
   });
 
   const createEmployee = useMutation({
     mutationFn: async (payload: RegisterForm) =>
-      http.post<CreateEmployeeResponse>("/employees", payload).then((response) => unwrap(response.data)),
+      http
+        .post<CreateEmployeeResponse>("/employees", payload)
+        .then((response) => unwrap(response.data)),
     onSuccess: (response) => {
       setCredentials(response.tempPassword);
       setOpen(false);

@@ -27,7 +27,14 @@ router.put(
     }
 
     // Re-fetch user with password for comparison
-    const user = await UserModel.findById(req.user._id).select("+password");
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOne({ _id: req.user._id, companyId }).select("+password");
+    }
+    if (!user) {
+      user = await UserModel.findById(req.user._id).select("+password");
+    }
     if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);

@@ -2,10 +2,14 @@ import mongoose from "mongoose";
 
 const HolidaySchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     date: {
       type: String, // YYYY-MM-DD
       required: true,
-      unique: true,
       trim: true,
     },
     name: {
@@ -16,5 +20,7 @@ const HolidaySchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+HolidaySchema.index({ companyId: 1, date: 1 }, { unique: true });
 
 export const HolidayModel = mongoose.models.holidays || mongoose.model("holidays", HolidaySchema);

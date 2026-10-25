@@ -21,18 +21,39 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-// ── Setup Module ─────────────────────────────────────────────────────────────
+// ── Multi-Tenant Company & Registration Module ────────────────────────────────
+
+export interface Company {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RegisterRequest {
+  companyName: string;
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  company: Company;
+  user: AuthUser;
+  token?: string;
+  settings?: CompanySettings;
+}
+
+// ── Setup Module (Legacy Aliases) ───────────────────────────────────────────
 
 export interface SetupStatusResponse {
   needsSetup: boolean;
   isSetup?: boolean;
 }
 
-export interface SetupRequest {
-  companyName: string;
-  adminName: string;
-  adminEmail: string;
-  adminPassword: string;
+export interface SetupRequest extends RegisterRequest {
   email?: string;
   password?: string;
 }
@@ -40,7 +61,8 @@ export interface SetupRequest {
 export interface SetupResponse {
   message: string;
   user: AuthUser;
-  settings: CompanySettings;
+  company?: Company;
+  settings?: CompanySettings;
 }
 
 // ── Auth Module ──────────────────────────────────────────────────────────────
@@ -49,6 +71,7 @@ export type UserRole = "admin" | "hr" | "employee";
 
 export interface AuthUser {
   id: string;
+  companyId?: string;
   email: string;
   role: UserRole;
   employeeId?: string | null;

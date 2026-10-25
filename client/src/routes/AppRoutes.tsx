@@ -10,6 +10,7 @@ import Loading from "../components/shared/Loading";
 
 import {
   DashboardPage,
+  RegisterPage,
   SetupPage,
   LoginPage,
   ChangePasswordPage,
@@ -49,13 +50,15 @@ export const AppRoutes: React.FC = () => {
         />
 
         <Route
-          path="/setup"
+          path="/register"
           element={
-            <Suspense fallback={<Loading fullScreen text="Checking system setup..." />}>
-              <SetupPage />
+            <Suspense fallback={<Loading fullScreen text="Loading registration..." />}>
+              <RegisterPage />
             </Suspense>
           }
         />
+
+        <Route path="/setup" element={<Navigate to="/register" replace />} />
 
         <Route
           path="/change-password"

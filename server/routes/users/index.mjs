@@ -51,7 +51,7 @@ router.get(
   requireAuth,
   requireRole("admin"),
   asyncHandler(async (req, res) => {
-    const users = await userService.getUsers(req.query);
+    const users = await userService.getUsers(req.query, req.user);
     return res.status(200).json({ data: users });
   }),
 );

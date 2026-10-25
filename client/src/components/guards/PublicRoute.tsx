@@ -20,7 +20,8 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     if (mustChangePassword) {
       return <Navigate to="/change-password" replace />;
     }
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
+    const from =
+      (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
     return <Navigate to={from} replace />;
   }
 

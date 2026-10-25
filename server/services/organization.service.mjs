@@ -5,16 +5,32 @@ import { audit } from "./audit.service.mjs";
 
 // ── Departments ─────────────────────────────────────────────────────────────
 
-export const getDepartments = async () => {
+export const getDepartments = async (actorOrCompanyId = null) => {
+  const companyId =
+    actorOrCompanyId?.companyId ||
+    (typeof actorOrCompanyId === "string" || actorOrCompanyId instanceof mongoose.Types.ObjectId
+      ? actorOrCompanyId
+      : null);
+  const query = companyId ? { companyId } : {};
+
   if (mongoose.connection.readyState !== 1 && !DepartmentModel.find?.mock) {
     return [];
   }
-  return await DepartmentModel.find().sort({ name: 1 }).lean();
+  return await DepartmentModel.find(query).sort({ name: 1 }).lean();
 };
 
-export const getDepartmentById = async (id) => {
-  const dept = await DepartmentModel.findById(id).lean();
-  if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+export const getDepartmentById = async (id, actor = null) => {
+  const companyId = actor?.companyId;
+  let dept;
+  if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+    dept = await DepartmentModel.findOne({ _id: id, companyId }).lean();
+  }
+  if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+    dept = await DepartmentModel.findById(id).lean();
+  }
+  if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Department not found");
+  }
   return dept;
 };
 
@@ -23,14 +39,22 @@ export const createDepartment = async ({ name }, actor) => {
     throw new AppError(400, "VALIDATION_ERROR", "Department name is required");
   }
 
-  const existing = await DepartmentModel.findOne({ name: name.trim() });
+  const companyId = actor?.companyId;
+  const existing = await DepartmentModel.findOne({
+    name: name.trim(),
+    ...(companyId ? { companyId } : {}),
+  });
   if (existing) {
     throw new AppError(409, "DUPLICATE_DEPARTMENT", `Department '${name.trim()}' already exists`);
   }
 
-  const dept = await DepartmentModel.create({ name: name.trim() });
+  const dept = await DepartmentModel.create({
+    ...(companyId ? { companyId } : {}),
+    name: name.trim(),
+  });
 
   await audit({
+    companyId: companyId || dept.companyId,
     actor,
     actorRole: actor.role,
     action: "DEPARTMENT_CREATED",
@@ -48,10 +72,23 @@ export const updateDepartment = async (id, { name }, actor) => {
     throw new AppError(400, "VALIDATION_ERROR", "Department name is required");
   }
 
-  const dept = await DepartmentModel.findById(id);
-  if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+  const companyId = actor?.companyId;
+  let dept;
+  if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+    dept = await DepartmentModel.findOne({ _id: id, companyId });
+  }
+  if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+    dept = await DepartmentModel.findById(id);
+  }
+  if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Department not found");
+  }
 
-  const existing = await DepartmentModel.findOne({ name: name.trim(), _id: { $ne: id } });
+  const existing = await DepartmentModel.findOne({
+    name: name.trim(),
+    _id: { $ne: id },
+    ...(companyId ? { companyId } : {}),
+  });
   if (existing) {
     throw new AppError(409, "DUPLICATE_DEPARTMENT", `Department '${name.trim()}' already exists`);
   }
@@ -63,6 +100,7 @@ export const updateDepartment = async (id, { name }, actor) => {
   const after = dept.toObject ? dept.toObject() : { ...dept };
 
   await audit({
+    companyId: companyId || dept.companyId,
     actor,
     actorRole: actor.role,
     action: "DEPARTMENT_UPDATED",
@@ -76,14 +114,26 @@ export const updateDepartment = async (id, { name }, actor) => {
 };
 
 export const deleteDepartment = async (id, actor) => {
-  const dept = await DepartmentModel.findById(id);
-  if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+  const companyId = actor?.companyId;
+  let dept;
+  if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+    dept = await DepartmentModel.findOne({ _id: id, companyId });
+  }
+  if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+    dept = await DepartmentModel.findById(id);
+  }
+  if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Department not found");
+  }
 
   // Tolerant check: if employees exist using this department, reject with 409
   let employeeCount = 0;
   try {
     if (mongoose.connection.readyState === 1 || EmployeeModel.countDocuments?.mock) {
-      employeeCount = await EmployeeModel.countDocuments({ departmentId: id });
+      employeeCount = await EmployeeModel.countDocuments({
+        departmentId: id,
+        ...(companyId ? { companyId } : {}),
+      });
     }
   } catch {
     // Tolerates Employee model not yet migrated
@@ -101,7 +151,10 @@ export const deleteDepartment = async (id, actor) => {
   let designationCount = 0;
   try {
     if (mongoose.connection.readyState === 1 || DesignationModel.countDocuments?.mock) {
-      designationCount = await DesignationModel.countDocuments({ departmentId: id });
+      designationCount = await DesignationModel.countDocuments({
+        departmentId: id,
+        ...(companyId ? { companyId } : {}),
+      });
     }
   } catch {}
 
@@ -114,9 +167,10 @@ export const deleteDepartment = async (id, actor) => {
   }
 
   const before = dept.toObject ? dept.toObject() : { ...dept };
-  await DepartmentModel.deleteOne({ _id: id });
+  await DepartmentModel.deleteOne({ _id: id, ...(companyId ? { companyId } : {}) });
 
   await audit({
+    companyId: companyId || dept.companyId,
     actor,
     actorRole: actor.role,
     action: "DEPARTMENT_DELETED",
@@ -131,8 +185,10 @@ export const deleteDepartment = async (id, actor) => {
 
 // ── Designations ────────────────────────────────────────────────────────────
 
-export const getDesignations = async (filters = {}) => {
+export const getDesignations = async (filters = {}, actor = null) => {
+  const companyId = actor?.companyId || filters.companyId;
   const query = {};
+  if (companyId) query.companyId = companyId;
   if (filters.departmentId) query.departmentId = filters.departmentId;
 
   if (mongoose.connection.readyState !== 1 && !DesignationModel.find?.mock) {
@@ -144,9 +200,20 @@ export const getDesignations = async (filters = {}) => {
     .lean();
 };
 
-export const getDesignationById = async (id) => {
-  const desig = await DesignationModel.findById(id).populate("departmentId", "name").lean();
-  if (!desig) throw new AppError(404, "NOT_FOUND", "Designation not found");
+export const getDesignationById = async (id, actor = null) => {
+  const companyId = actor?.companyId;
+  let desig;
+  if (companyId && (mongoose.connection.readyState === 1 || DesignationModel.findOne?.mock)) {
+    desig = await DesignationModel.findOne({ _id: id, companyId })
+      .populate("departmentId", "name")
+      .lean();
+  }
+  if (!desig && (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock)) {
+    desig = await DesignationModel.findById(id).populate("departmentId", "name").lean();
+  }
+  if (!desig || (companyId && desig.companyId && String(desig.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Designation not found");
+  }
   return desig;
 };
 
@@ -155,22 +222,36 @@ export const createDesignation = async ({ name, departmentId = null }, actor) =>
     throw new AppError(400, "VALIDATION_ERROR", "Designation name is required");
   }
 
-  const existing = await DesignationModel.findOne({ name: name.trim() });
+  const companyId = actor?.companyId;
+  const existing = await DesignationModel.findOne({
+    name: name.trim(),
+    ...(companyId ? { companyId } : {}),
+  });
   if (existing) {
     throw new AppError(409, "DUPLICATE_DESIGNATION", `Designation '${name.trim()}' already exists`);
   }
 
   if (departmentId) {
-    const dept = await DepartmentModel.findById(departmentId);
-    if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+    let dept;
+    if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+      dept = await DepartmentModel.findOne({ _id: departmentId, companyId });
+    }
+    if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+      dept = await DepartmentModel.findById(departmentId);
+    }
+    if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+      throw new AppError(404, "NOT_FOUND", "Department not found");
+    }
   }
 
   const desig = await DesignationModel.create({
+    ...(companyId ? { companyId } : {}),
     name: name.trim(),
     departmentId: departmentId || null,
   });
 
   await audit({
+    companyId: companyId || desig.companyId,
     actor,
     actorRole: actor.role,
     action: "DESIGNATION_CREATED",
@@ -184,8 +265,17 @@ export const createDesignation = async ({ name, departmentId = null }, actor) =>
 };
 
 export const updateDesignation = async (id, updates, actor) => {
-  const desig = await DesignationModel.findById(id);
-  if (!desig) throw new AppError(404, "NOT_FOUND", "Designation not found");
+  const companyId = actor?.companyId;
+  let desig;
+  if (companyId && (mongoose.connection.readyState === 1 || DesignationModel.findOne?.mock)) {
+    desig = await DesignationModel.findOne({ _id: id, companyId });
+  }
+  if (!desig && (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock)) {
+    desig = await DesignationModel.findById(id);
+  }
+  if (!desig || (companyId && desig.companyId && String(desig.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Designation not found");
+  }
 
   const before = desig.toObject ? desig.toObject() : { ...desig };
 
@@ -193,6 +283,7 @@ export const updateDesignation = async (id, updates, actor) => {
     const existing = await DesignationModel.findOne({
       name: updates.name.trim(),
       _id: { $ne: id },
+      ...(companyId ? { companyId } : {}),
     });
     if (existing) {
       throw new AppError(
@@ -206,8 +297,16 @@ export const updateDesignation = async (id, updates, actor) => {
 
   if (updates.departmentId !== undefined) {
     if (updates.departmentId) {
-      const dept = await DepartmentModel.findById(updates.departmentId);
-      if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+      let dept;
+      if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+        dept = await DepartmentModel.findOne({ _id: updates.departmentId, companyId });
+      }
+      if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+        dept = await DepartmentModel.findById(updates.departmentId);
+      }
+      if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+        throw new AppError(404, "NOT_FOUND", "Department not found");
+      }
       desig.departmentId = updates.departmentId;
     } else {
       desig.departmentId = null;
@@ -219,6 +318,7 @@ export const updateDesignation = async (id, updates, actor) => {
   const after = desig.toObject ? desig.toObject() : { ...desig };
 
   await audit({
+    companyId: companyId || desig.companyId,
     actor,
     actorRole: actor.role,
     action: "DESIGNATION_UPDATED",
@@ -232,13 +332,25 @@ export const updateDesignation = async (id, updates, actor) => {
 };
 
 export const deleteDesignation = async (id, actor) => {
-  const desig = await DesignationModel.findById(id);
-  if (!desig) throw new AppError(404, "NOT_FOUND", "Designation not found");
+  const companyId = actor?.companyId;
+  let desig;
+  if (companyId && (mongoose.connection.readyState === 1 || DesignationModel.findOne?.mock)) {
+    desig = await DesignationModel.findOne({ _id: id, companyId });
+  }
+  if (!desig && (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock)) {
+    desig = await DesignationModel.findById(id);
+  }
+  if (!desig || (companyId && desig.companyId && String(desig.companyId) !== String(companyId))) {
+    throw new AppError(404, "NOT_FOUND", "Designation not found");
+  }
 
   let employeeCount = 0;
   try {
     if (mongoose.connection.readyState === 1 || EmployeeModel.countDocuments?.mock) {
-      employeeCount = await EmployeeModel.countDocuments({ designationId: id });
+      employeeCount = await EmployeeModel.countDocuments({
+        designationId: id,
+        ...(companyId ? { companyId } : {}),
+      });
     }
   } catch {}
 
@@ -251,9 +363,10 @@ export const deleteDesignation = async (id, actor) => {
   }
 
   const before = desig.toObject ? desig.toObject() : { ...desig };
-  await DesignationModel.deleteOne({ _id: id });
+  await DesignationModel.deleteOne({ _id: id, ...(companyId ? { companyId } : {}) });
 
   await audit({
+    companyId: companyId || desig.companyId,
     actor,
     actorRole: actor.role,
     action: "DESIGNATION_DELETED",

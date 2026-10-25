@@ -3,6 +3,11 @@ import { emailPattern } from "../../utils/core.mjs";
 
 const UserSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     firstname: {
       type: String,
       required: true,
@@ -17,7 +22,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true,
       lowercase: true,
       match: [emailPattern, "Please enter a valid email"],
     },
@@ -30,7 +34,6 @@ const UserSchema = new mongoose.Schema(
     username: {
       type: String,
       trim: true,
-      unique: true,
       sparse: true, // optional for HCM users created by HR
     },
     profileimg: {
@@ -60,5 +63,9 @@ const UserSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Compound unique indexes per company
+UserSchema.index({ companyId: 1, email: 1 }, { unique: true });
+UserSchema.index({ companyId: 1, username: 1 }, { unique: true, sparse: true });
 
 export const UserModel = mongoose.model("users", UserSchema);

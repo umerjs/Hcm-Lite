@@ -26,7 +26,7 @@ router.get(
     }
 
     const month = req.query.month || formatDate(new Date()).slice(0, 7);
-    const summary = await payrollService.calculateEmployeePayroll(employeeId, month);
+    const summary = await payrollService.calculateEmployeePayroll(employeeId, month, req.user);
 
     return res.status(200).json({ data: summary, month });
   }),
@@ -42,7 +42,7 @@ router.get(
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
     const month = req.query.month || formatDate(new Date()).slice(0, 7);
-    const summaries = await payrollService.getMonthlyPayrollSummaries(month);
+    const summaries = await payrollService.getMonthlyPayrollSummaries(month, req.user);
 
     return res.status(200).json({ data: summaries, month });
   }),
@@ -71,8 +71,8 @@ router.get(
       }
     }
 
-    const payrollData = await payrollService.calculateEmployeePayroll(employeeId, month);
-    const settings = await getSettings();
+    const payrollData = await payrollService.calculateEmployeePayroll(employeeId, month, req.user);
+    const settings = await getSettings(req.user.companyId);
 
     const pdfBuffer = await pdfService.generatePayslipPdf(payrollData, settings);
 

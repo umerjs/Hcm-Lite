@@ -15,7 +15,7 @@ router.get(
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
     const date = req.query.date;
-    const metrics = await analyticsService.getHrMetrics(date);
+    const metrics = await analyticsService.getHrMetrics(date, req.user);
     return res.status(200).json(metrics);
   }),
 );
@@ -38,7 +38,7 @@ router.get(
     }
 
     const month = req.query.month;
-    const metrics = await analyticsService.getEmployeeMetrics(employeeId, month);
+    const metrics = await analyticsService.getEmployeeMetrics(employeeId, month, req.user);
     return res.status(200).json(metrics);
   }),
 );

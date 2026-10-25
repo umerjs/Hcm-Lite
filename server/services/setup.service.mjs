@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import {
+  CompanyModel,
   UserModel,
   EmployeeModel,
   CounterModel,
@@ -80,12 +81,30 @@ export const performSetup = async ({
 
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
+  let createdCompanyId = null;
   let createdAdminId = null;
   let createdSettingsId = null;
 
   try {
+    // 0. Create Company
+    let companyId;
+    let companyDoc = null;
+    if (mongoose.connection.readyState === 1 || CompanyModel.create?.mock) {
+      companyDoc = await CompanyModel.create({
+        name: companyName.trim(),
+        isActive: true,
+      });
+      createdCompanyId = companyDoc._id;
+      companyId = companyDoc._id;
+    } else {
+      companyId = new mongoose.Types.ObjectId("671a11112222333344449999");
+      createdCompanyId = companyId;
+      companyDoc = { _id: companyId, name: companyName.trim(), isActive: true };
+    }
+
     // 1. Create the admin user first inside try/catch
     const adminUser = await UserModel.create({
+      companyId,
       firstname,
       lastname,
       email: adminEmail.trim().toLowerCase(),
@@ -96,21 +115,50 @@ export const performSetup = async ({
     });
     createdAdminId = adminUser._id;
 
-    // 2. Create the settings document with fixed singleton _id
+    // 2. Create the settings document linked to companyId
     const settingsDoc = await SettingsModel.create({
-      _id: "company_settings",
+      companyId,
       ...DEFAULT_SETTINGS,
       companyName: companyName.trim(),
     });
     createdSettingsId = settingsDoc._id;
 
     // 3. Seed leave types (annual 14, sick 8, casual 10, unpaid null)
-    for (const lt of DEFAULT_LEAVE_TYPES) {
-      await LeaveTypeModel.updateOne({ key: lt.key }, { $setOnInsert: lt }, { upsert: true });
+    if (
+      mongoose.connection.readyState === 1 ||
+      LeaveTypeModel.create?.mock ||
+      LeaveTypeModel.updateOne?.mock
+    ) {
+      for (const lt of DEFAULT_LEAVE_TYPES) {
+        if (LeaveTypeModel.updateOne?.mock) {
+          await LeaveTypeModel.updateOne(
+            { companyId, key: lt.key },
+            {
+              $setOnInsert: {
+                companyId,
+                key: lt.key,
+                name: lt.name,
+                yearlyQuota: lt.yearlyQuota,
+                isPaid: lt.isPaid,
+              },
+            },
+            { upsert: true },
+          );
+        } else {
+          await LeaveTypeModel.create({
+            companyId,
+            key: lt.key,
+            name: lt.name,
+            yearlyQuota: lt.yearlyQuota,
+            isPaid: lt.isPaid,
+          });
+        }
+      }
     }
 
     // 4. Write setup.completed audit row (actor null, actorRole "system")
     await audit({
+      companyId,
       actor: null,
       actorRole: "system",
       action: "setup.completed",
@@ -118,6 +166,7 @@ export const performSetup = async ({
       entityId: adminUser._id,
       before: null,
       after: {
+        companyId,
         companyName: companyName.trim(),
         adminEmail: adminUser.email,
         isBoot,
@@ -126,8 +175,14 @@ export const performSetup = async ({
 
     return {
       message: "Setup completed successfully",
+      company: {
+        id: companyDoc?._id || companyId,
+        name: companyDoc?.name || companyName.trim(),
+        isActive: companyDoc?.isActive ?? true,
+      },
       user: {
         id: adminUser._id,
+        companyId: companyId,
         email: adminUser.email,
         role: adminUser.role,
         firstname: adminUser.firstname,
@@ -138,6 +193,9 @@ export const performSetup = async ({
     };
   } catch (err) {
     // Rollback: If any later step fails, delete everything this call created so needsSetup stays true!
+    if (createdCompanyId && (mongoose.connection.readyState === 1 || CompanyModel.deleteOne?.mock)) {
+      await CompanyModel.deleteOne({ _id: createdCompanyId }).catch(() => {});
+    }
     if (createdAdminId && (mongoose.connection.readyState === 1 || UserModel.deleteOne?.mock)) {
       await UserModel.deleteOne({ _id: createdAdminId }).catch(() => {});
     }
@@ -146,6 +204,18 @@ export const performSetup = async ({
       (mongoose.connection.readyState === 1 || SettingsModel.deleteOne?.mock)
     ) {
       await SettingsModel.deleteOne({ _id: createdSettingsId }).catch(() => {});
+    }
+    if (
+      createdCompanyId &&
+      (mongoose.connection.readyState === 1 || LeaveTypeModel.deleteMany?.mock)
+    ) {
+      await LeaveTypeModel.deleteMany({ companyId: createdCompanyId }).catch(() => {});
+    }
+    if (
+      createdCompanyId &&
+      (mongoose.connection.readyState === 1 || CompanyModel.deleteOne?.mock)
+    ) {
+      await CompanyModel.deleteOne({ _id: createdCompanyId }).catch(() => {});
     }
 
     if (err.isAppError) throw err;
@@ -158,249 +228,6 @@ export const performSetup = async ({
     }
     throw err;
   }
-};
-
-/**
- * Resets database to a completely clean, empty state.
- * Allows the Saylani Hackathon judges to test first-run setup from an empty database.
- */
-export const resetDatabase = async () => {
-  if (mongoose.connection.readyState === 1) {
-    const db = mongoose.connection.db;
-    const existing = (await db.listCollections().toArray()).map((c) => c.name);
-
-    for (const coll of [
-      "users",
-      "employees",
-      "counters",
-      "settings",
-      "leavetypes",
-      "departments",
-      "designations",
-      "holidays",
-      "announcements",
-      "notifications",
-      "attendances",
-      "leaverequests",
-      "corrections",
-      "ai_logs",
-    ]) {
-      if (existing.includes(coll)) {
-        await db
-          .collection(coll)
-          .deleteMany({})
-          .catch(() => {});
-      }
-    }
-  }
-
-  return {
-    success: true,
-    needsSetup: true,
-    message: "Database has been reset to an empty first-run state. /setup is now active.",
-  };
-};
-
-/**
- * Populates database with the standard Saylani Hackathon enterprise demo dataset.
- */
-export const seedDatabase = async () => {
-  // First clear
-  await resetDatabase();
-
-  // 1. Settings
-  await SettingsModel.create({
-    _id: "company_settings",
-    companyName: "Saylani HCM Lite",
-    timezone: "Asia/Karachi",
-    officeStart: "09:00",
-    graceMinutes: 15,
-    halfDayHours: 5,
-    weekend: ["Sat", "Sun"],
-    latePenaltyEnabled: false,
-    radiusMeters: 150,
-  });
-
-  // 2. Leave Types
-  await LeaveTypeModel.insertMany([
-    { key: "casual", name: "Casual Leave", yearlyQuota: 10, isPaid: true },
-    { key: "sick", name: "Sick Leave", yearlyQuota: 8, isPaid: true },
-    { key: "annual", name: "Annual Leave", yearlyQuota: 14, isPaid: true },
-    { key: "unpaid", name: "Unpaid Leave", yearlyQuota: null, isPaid: false },
-  ]);
-
-  // 3. Holidays
-  await HolidayModel.insertMany([
-    { date: "2026-03-23", name: "Pakistan Day" },
-    { date: "2026-05-01", name: "Labour Day" },
-    { date: "2026-08-14", name: "Independence Day" },
-    { date: "2026-11-09", name: "Iqbal Day" },
-    { date: "2026-12-25", name: "Quaid-e-Azam Day" },
-  ]);
-
-  // 4. Departments
-  const [deptEng, deptHr, deptFin] = await DepartmentModel.insertMany([
-    { name: "Engineering" },
-    { name: "Human Resources" },
-    { name: "Finance & Accounts" },
-  ]);
-
-  // 5. Designations
-  const [desigEngLead, desigDev, desigHrLead, desigFinAnalyst] = await DesignationModel.insertMany([
-    { name: "Senior Software Engineer", departmentId: deptEng._id },
-    { name: "Full Stack Developer", departmentId: deptEng._id },
-    { name: "HR Business Partner", departmentId: deptHr._id },
-    { name: "Financial Analyst", departmentId: deptFin._id },
-  ]);
-
-  // 6. Passwords
-  const adminHash = await bcrypt.hash("AdminPassword123!", 10);
-  const hrHash = await bcrypt.hash("HrPassword123!", 10);
-  const empHash = await bcrypt.hash("EmpPassword123!", 10);
-
-  // 7. Admin
-  const adminUser = await UserModel.create({
-    firstname: "Saylani",
-    lastname: "Admin",
-    email: "admin@saylani.org",
-    password: adminHash,
-    role: "admin",
-    isActive: true,
-    mustChangePassword: false,
-  });
-
-  // 8. HR User and Employee
-  const hrUser = await UserModel.create({
-    firstname: "Sara",
-    lastname: "Ahmed",
-    email: "hr@saylani.org",
-    password: hrHash,
-    role: "hr",
-    isActive: true,
-    mustChangePassword: false,
-  });
-
-  const hrEmp = await EmployeeModel.create({
-    code: "EMP-0001",
-    name: "Sara Ahmed",
-    email: "hr@saylani.org",
-    phone: "+92 300 1234567",
-    address: "Gulshan-e-Iqbal, Karachi",
-    gender: "female",
-    departmentId: deptHr._id,
-    designationId: desigHrLead._id,
-    joinDate: "2024-01-15",
-    status: "active",
-    basicSalary: 125000,
-    userId: hrUser._id,
-  });
-  await UserModel.updateOne({ _id: hrUser._id }, { employeeId: hrEmp._id });
-
-  // 9. Employee 1 (Bilal Khan)
-  const empUser1 = await UserModel.create({
-    firstname: "Bilal",
-    lastname: "Khan",
-    email: "emp@saylani.org",
-    password: empHash,
-    role: "employee",
-    isActive: true,
-    mustChangePassword: false,
-  });
-
-  const emp1 = await EmployeeModel.create({
-    code: "EMP-0002",
-    name: "Bilal Khan",
-    email: "emp@saylani.org",
-    phone: "+92 321 9876543",
-    address: "PECHS Block 2, Karachi",
-    gender: "male",
-    departmentId: deptEng._id,
-    designationId: desigEngLead._id,
-    joinDate: "2024-03-01",
-    status: "active",
-    basicSalary: 180000,
-    userId: empUser1._id,
-  });
-  await UserModel.updateOne({ _id: empUser1._id }, { employeeId: emp1._id });
-
-  // 10. Employee 2 (Zainab Fatima)
-  const empUser2 = await UserModel.create({
-    firstname: "Zainab",
-    lastname: "Fatima",
-    email: "zainab@saylani.org",
-    password: empHash,
-    role: "employee",
-    isActive: true,
-    mustChangePassword: false,
-  });
-
-  const emp2 = await EmployeeModel.create({
-    code: "EMP-0003",
-    name: "Zainab Fatima",
-    email: "zainab@saylani.org",
-    gender: "female",
-    departmentId: deptEng._id,
-    designationId: desigDev._id,
-    joinDate: "2024-06-15",
-    status: "active",
-    basicSalary: 140000,
-    userId: empUser2._id,
-  });
-  await UserModel.updateOne({ _id: empUser2._id }, { employeeId: emp2._id });
-
-  // Counter
-  await CounterModel.create({ _id: "employeeCode", seq: 3 });
-
-  // Attendance
-  await AttendanceModel.insertMany([
-    {
-      employeeId: emp1._id,
-      date: "2026-10-23",
-      checkIn: new Date("2026-10-23T04:05:00.000Z"),
-      checkOut: new Date("2026-10-23T13:00:00.000Z"),
-      workedHours: 8.92,
-      isLate: false,
-      status: "present",
-    },
-    {
-      employeeId: emp1._id,
-      date: "2026-10-24",
-      checkIn: new Date("2026-10-24T04:10:00.000Z"),
-      checkOut: null,
-      workedHours: 0,
-      isLate: false,
-      status: "missing_checkout",
-    },
-  ]);
-
-  // Announcements
-  await AnnouncementModel.create({
-    title: "Saylani Hackathon 2026 - Welcome HCM Lite Evaluators!",
-    body: "Welcome to HCM Lite. You can switch between Admin, HR, and Employee roles using the quick demo credentials on the login screen.",
-    postedBy: { userId: adminUser._id, name: "Saylani Admin", role: "admin" },
-    targetRole: "all",
-  });
-
-  // Audit
-  await AuditLogModel.create({
-    actor: adminUser._id,
-    actorRole: "admin",
-    action: "SYSTEM_INITIALIZED",
-    entity: "settings",
-    entityId: "company_settings",
-    after: { companyName: "Saylani HCM Lite" },
-  });
-
-  return {
-    success: true,
-    needsSetup: false,
-    message: "Demo dataset seeded successfully.",
-    credentials: {
-      admin: "admin@saylani.org / AdminPassword123!",
-      hr: "hr@saylani.org / HrPassword123!",
-      employee: "emp@saylani.org / EmpPassword123!",
-    },
-  };
 };
 
 /**

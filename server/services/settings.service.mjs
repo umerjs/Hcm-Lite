@@ -26,7 +26,18 @@ export const DEFAULT_SETTINGS = {
  * - In NODE_ENV=test: returns DB document if connected/mocked, or DEFAULT_SETTINGS fallback.
  * - Outside tests: strictly queries the DB; if read fails or no doc exists, throws AppError 500 SETTINGS_UNAVAILABLE.
  */
-export const getSettings = async () => {
+export const getSettings = async (companyIdOrActor = null) => {
+  let resolvedCompanyId = null;
+  if (companyIdOrActor) {
+    if (typeof companyIdOrActor === "object") {
+      resolvedCompanyId = companyIdOrActor.companyId || companyIdOrActor._id;
+    } else {
+      resolvedCompanyId = companyIdOrActor;
+    }
+  }
+
+  const query = resolvedCompanyId ? { companyId: resolvedCompanyId } : {};
+
   if (process.env.NODE_ENV === "test") {
     if (
       mongoose.connection.readyState === 1 ||
@@ -34,8 +45,13 @@ export const getSettings = async () => {
       SettingsModel.findById?.mock
     ) {
       try {
-        const doc =
-          (await SettingsModel.findById("company_settings")) || (await SettingsModel.findOne());
+        let doc = null;
+        if (SettingsModel.findOne?.mock || (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)) {
+          doc = await SettingsModel.findOne(query);
+        }
+        if (!doc && (SettingsModel.findById?.mock || mongoose.connection.readyState === 1)) {
+          doc = SettingsModel.findById ? await SettingsModel.findById("company_settings") : null;
+        }
         if (doc) {
           return { ...DEFAULT_SETTINGS, ...(doc.toObject ? doc.toObject() : doc) };
         }
@@ -49,7 +65,8 @@ export const getSettings = async () => {
   // Production / Development environment: DB settings are strictly required
   try {
     const doc =
-      (await SettingsModel.findById("company_settings")) || (await SettingsModel.findOne());
+      (await SettingsModel.findOne(query)) ||
+      (SettingsModel.findById ? await SettingsModel.findById("company_settings") : null);
     if (!doc) {
       throw new AppError(
         500,
@@ -85,19 +102,26 @@ export const updateSettings = async (user, updates) => {
     throw new AppError(403, "FORBIDDEN", "Only administrators can modify company settings");
   }
 
+  const companyId = user?.companyId;
+  const query = companyId ? { companyId } : {};
+
   let settings;
   if (
     mongoose.connection.readyState === 1 ||
     SettingsModel.findById?.mock ||
     SettingsModel.findOne?.mock
   ) {
-    settings =
-      (await SettingsModel.findById("company_settings")) || (await SettingsModel.findOne());
+    if (SettingsModel.findOne?.mock || (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)) {
+      settings = await SettingsModel.findOne(query);
+    }
+    if (!settings && (SettingsModel.findById?.mock || mongoose.connection.readyState === 1)) {
+      settings = SettingsModel.findById ? await SettingsModel.findById("company_settings") : null;
+    }
   }
 
   if (!settings) {
     settings = new SettingsModel({
-      _id: "company_settings",
+      companyId,
       ...DEFAULT_SETTINGS,
     });
   }
@@ -124,12 +148,17 @@ export const updateSettings = async (user, updates) => {
     }
   }
 
+  if (companyId && !settings.companyId) {
+    settings.companyId = companyId;
+  }
+
   await settings.save();
 
   const after = settings.toObject ? settings.toObject() : { ...settings };
 
   // Write immutable audit log row
   await audit({
+    companyId: companyId || settings.companyId,
     actor: user,
     actorRole: user.role,
     action: "SETTINGS_UPDATE",

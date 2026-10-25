@@ -18,21 +18,27 @@ describe("Slice A1: First-Run Setup, Settings & Audit API", () => {
   let hrToken;
   let employeeToken;
 
+  const mockCompanyId = "671a11112222333344449999";
+
   beforeEach(() => {
     vi.restoreAllMocks();
 
     adminToken = jwt.sign(
-      { _id: adminId, role: "admin", email: "admin@company.com" },
+      { _id: adminId, role: "admin", email: "admin@company.com", companyId: mockCompanyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign({ _id: hrId, role: "hr", email: "hr@company.com" }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    hrToken = jwt.sign(
+      { _id: hrId, role: "hr", email: "hr@company.com", companyId: mockCompanyId },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
 
     employeeToken = jwt.sign(
-      { _id: employeeId, role: "employee", email: "emp@company.com" },
+      { _id: employeeId, role: "employee", email: "emp@company.com", companyId: mockCompanyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -47,6 +53,7 @@ describe("Slice A1: First-Run Setup, Settings & Audit API", () => {
       return {
         select: vi.fn().mockResolvedValue({
           _id: id,
+          companyId: mockCompanyId,
           email: `${role}@company.com`,
           role,
           isActive: true,
@@ -632,6 +639,7 @@ describe("Slice A1: First-Run Setup, Settings & Audit API", () => {
 
       // Testing save() on an existing document (isNew === false)
       const existingAuditDoc = new AuditLogModel({
+        companyId: mockCompanyId,
         action: "TEST",
         entity: "test",
         entityId: "123",

@@ -34,7 +34,8 @@ export const Unauthorized: React.FC<UnauthorizedProps> = ({ requiredRole }) => {
           </p>
           {requiredRole && (
             <p className="text-xs text-muted-foreground/80 font-medium">
-              Required access level: <span className="text-primary font-semibold">{requiredRole}</span>
+              Required access level:{" "}
+              <span className="text-primary font-semibold">{requiredRole}</span>
             </p>
           )}
         </div>
@@ -42,7 +43,8 @@ export const Unauthorized: React.FC<UnauthorizedProps> = ({ requiredRole }) => {
         <div className="p-4 rounded-xl bg-muted/30 border border-border text-xs text-muted-foreground text-left space-y-1.5">
           <p className="font-semibold text-foreground">Need access to this section?</p>
           <p>
-            If your responsibilities require viewing this area, please contact your System Administrator or Human Resources Manager to update your role permissions.
+            If your responsibilities require viewing this area, please contact your System
+            Administrator or Human Resources Manager to update your role permissions.
           </p>
         </div>
 

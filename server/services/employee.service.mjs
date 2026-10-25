@@ -27,6 +27,8 @@ export const createEmployee = async (data, actor) => {
     throw new AppError(403, "FORBIDDEN", "Only HR personnel can create employees");
   }
 
+  const companyId = actor.companyId;
+
   const {
     name,
     email,
@@ -61,32 +63,56 @@ export const createEmployee = async (data, actor) => {
 
   // Verify department exists
   let dept = null;
-  if (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock) {
-    dept = await DepartmentModel.findById(departmentId);
-    if (!dept) {
+  if (
+    mongoose.connection.readyState === 1 ||
+    DepartmentModel.findById?.mock ||
+    DepartmentModel.findOne?.mock
+  ) {
+    if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+      dept = await DepartmentModel.findOne({ _id: departmentId, companyId });
+    }
+    if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+      dept = await DepartmentModel.findById(departmentId);
+    }
+    if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
       throw new AppError(404, "NOT_FOUND", "Specified department does not exist");
     }
   }
 
   // Verify designation exists
   let desig = null;
-  if (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock) {
-    desig = await DesignationModel.findById(designationId);
-    if (!desig) {
+  if (
+    mongoose.connection.readyState === 1 ||
+    DesignationModel.findById?.mock ||
+    DesignationModel.findOne?.mock
+  ) {
+    if (companyId && (mongoose.connection.readyState === 1 || DesignationModel.findOne?.mock)) {
+      desig = await DesignationModel.findOne({ _id: designationId, companyId });
+    }
+    if (!desig && (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock)) {
+      desig = await DesignationModel.findById(designationId);
+    }
+    if (!desig || (companyId && desig.companyId && String(desig.companyId) !== String(companyId))) {
       throw new AppError(404, "NOT_FOUND", "Specified designation does not exist");
     }
   }
 
   // Check email uniqueness across both UserModel and EmployeeModel
   if (mongoose.connection.readyState === 1 || UserModel.findOne?.mock) {
-    const existingUser = await UserModel.findOne({ email: normalizedEmail });
+    const existingUser = await UserModel.findOne({
+      email: normalizedEmail,
+      ...(companyId ? { companyId } : {}),
+    });
     if (existingUser) {
       throw new AppError(409, "DUPLICATE_EMAIL", "A user with this email already exists");
     }
   }
 
   if (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock) {
-    const existingEmployee = await EmployeeModel.findOne({ email: normalizedEmail });
+    const existingEmployee = await EmployeeModel.findOne({
+      email: normalizedEmail,
+      ...(companyId ? { companyId } : {}),
+    });
     if (existingEmployee) {
       throw new AppError(409, "DUPLICATE_EMAIL", "An employee with this email already exists");
     }
@@ -96,7 +122,10 @@ export const createEmployee = async (data, actor) => {
   let employeeCode = code ? code.trim() : null;
   if (employeeCode) {
     if (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock) {
-      const codeTaken = await EmployeeModel.findOne({ code: employeeCode });
+      const codeTaken = await EmployeeModel.findOne({
+        code: employeeCode,
+        ...(companyId ? { companyId } : {}),
+      });
       if (codeTaken) {
         throw new AppError(
           409,
@@ -106,7 +135,7 @@ export const createEmployee = async (data, actor) => {
       }
     }
   } else {
-    employeeCode = await getNextEmployeeCode();
+    employeeCode = await getNextEmployeeCode(companyId);
   }
 
   // Generate 12-character random temporary password
@@ -127,6 +156,7 @@ export const createEmployee = async (data, actor) => {
     // 1. Create User
     createdUser = await UserModel.create({
       _id: userId,
+      companyId: companyId || new mongoose.Types.ObjectId("000000000000000000000001"),
       firstname,
       lastname,
       email: normalizedEmail,
@@ -140,6 +170,7 @@ export const createEmployee = async (data, actor) => {
     // 2. Create Employee
     createdEmployee = await EmployeeModel.create({
       _id: employeeId,
+      companyId: companyId || new mongoose.Types.ObjectId("000000000000000000000001"),
       code: employeeCode,
       name: name.trim(),
       email: normalizedEmail,
@@ -174,6 +205,7 @@ export const createEmployee = async (data, actor) => {
 
   // Audit
   await audit({
+    companyId: companyId || createdEmployee.companyId,
     actor,
     actorRole: actor.role,
     action: "EMPLOYEE_CREATED",
@@ -202,11 +234,16 @@ export const createEmployee = async (data, actor) => {
  * Retrieves paginated list of employees with search and filters.
  * Accessible to Admin and HR.
  */
-export const getEmployees = async ({ q, departmentId, status, page = 1, pageSize = 10 } = {}) => {
+export const getEmployees = async (
+  { q, departmentId, status, page = 1, pageSize = 10 } = {},
+  actor = null,
+) => {
   const p = Math.max(1, parseInt(page, 10) || 1);
   const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10) || 10));
 
   const filter = {};
+  const companyId = actor?.companyId;
+  if (companyId) filter.companyId = companyId;
   if (departmentId) filter.departmentId = departmentId;
   if (status) filter.status = status;
 
@@ -269,16 +306,33 @@ export const getEmployeeById = async (id, actor) => {
     }
   }
 
-  if (mongoose.connection.readyState !== 1 && !EmployeeModel.findById?.mock) {
+  if (
+    mongoose.connection.readyState !== 1 &&
+    !EmployeeModel.findById?.mock &&
+    !EmployeeModel.findOne?.mock
+  ) {
     return null;
   }
 
-  const employee = await EmployeeModel.findById(id)
-    .populate("departmentId", "name")
-    .populate("designationId", "name")
-    .lean();
+  const companyId = actor?.companyId;
+  let employee;
+  if (companyId && (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock)) {
+    employee = await EmployeeModel.findOne({ _id: id, companyId })
+      .populate("departmentId", "name")
+      .populate("designationId", "name")
+      .lean();
+  }
+  if (!employee && (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock)) {
+    employee = await EmployeeModel.findById(id)
+      .populate("departmentId", "name")
+      .populate("designationId", "name")
+      .lean();
+  }
 
-  if (!employee) {
+  if (
+    !employee ||
+    (companyId && employee.companyId && String(employee.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Employee not found");
   }
 
@@ -296,8 +350,18 @@ export const updateEmployee = async (id, updates, actor) => {
     throw new AppError(403, "FORBIDDEN", "Only HR personnel can update employee details");
   }
 
-  const employee = await EmployeeModel.findById(id);
-  if (!employee) {
+  const companyId = actor?.companyId;
+  let employee;
+  if (companyId && (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock)) {
+    employee = await EmployeeModel.findOne({ _id: id, companyId });
+  }
+  if (!employee && (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock)) {
+    employee = await EmployeeModel.findById(id);
+  }
+  if (
+    !employee ||
+    (companyId && employee.companyId && String(employee.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Employee not found");
   }
 
@@ -320,17 +384,44 @@ export const updateEmployee = async (id, updates, actor) => {
   }
 
   if (updates.departmentId) {
-    if (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock) {
-      const dept = await DepartmentModel.findById(updates.departmentId);
-      if (!dept) throw new AppError(404, "NOT_FOUND", "Department not found");
+    if (
+      mongoose.connection.readyState === 1 ||
+      DepartmentModel.findById?.mock ||
+      DepartmentModel.findOne?.mock
+    ) {
+      let dept;
+      if (companyId && (mongoose.connection.readyState === 1 || DepartmentModel.findOne?.mock)) {
+        dept = await DepartmentModel.findOne({ _id: updates.departmentId, companyId });
+      }
+      if (!dept && (mongoose.connection.readyState === 1 || DepartmentModel.findById?.mock)) {
+        dept = await DepartmentModel.findById(updates.departmentId);
+      }
+      if (!dept || (companyId && dept.companyId && String(dept.companyId) !== String(companyId))) {
+        throw new AppError(404, "NOT_FOUND", "Department not found");
+      }
     }
     employee.departmentId = updates.departmentId;
   }
 
   if (updates.designationId) {
-    if (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock) {
-      const desig = await DesignationModel.findById(updates.designationId);
-      if (!desig) throw new AppError(404, "NOT_FOUND", "Designation not found");
+    if (
+      mongoose.connection.readyState === 1 ||
+      DesignationModel.findById?.mock ||
+      DesignationModel.findOne?.mock
+    ) {
+      let desig;
+      if (companyId && (mongoose.connection.readyState === 1 || DesignationModel.findOne?.mock)) {
+        desig = await DesignationModel.findOne({ _id: updates.designationId, companyId });
+      }
+      if (!desig && (mongoose.connection.readyState === 1 || DesignationModel.findById?.mock)) {
+        desig = await DesignationModel.findById(updates.designationId);
+      }
+      if (
+        !desig ||
+        (companyId && desig.companyId && String(desig.companyId) !== String(companyId))
+      ) {
+        throw new AppError(404, "NOT_FOUND", "Designation not found");
+      }
     }
     employee.designationId = updates.designationId;
   }
@@ -350,9 +441,23 @@ export const updateEmployee = async (id, updates, actor) => {
         employee.exitDate = formatDate(new Date());
       }
       // Deactivate linked user login
-      if (employee.userId && (mongoose.connection.readyState === 1 || UserModel.findById?.mock)) {
+      if (
+        employee.userId &&
+        (mongoose.connection.readyState === 1 ||
+          UserModel.findById?.mock ||
+          UserModel.findOne?.mock)
+      ) {
         try {
-          const user = await UserModel.findById(employee.userId);
+          let user;
+          if (companyId && (mongoose.connection.readyState === 1 || UserModel.findOne?.mock)) {
+            user = await UserModel.findOne({
+              _id: employee.userId,
+              companyId,
+            });
+          }
+          if (!user && (mongoose.connection.readyState === 1 || UserModel.findById?.mock)) {
+            user = await UserModel.findById(employee.userId);
+          }
           if (user) {
             user.isActive = false;
             await user.save();
@@ -367,6 +472,7 @@ export const updateEmployee = async (id, updates, actor) => {
   const after = employee.toObject ? employee.toObject() : { ...employee };
 
   await audit({
+    companyId: companyId || employee.companyId,
     actor,
     actorRole: actor.role,
     action: "EMPLOYEE_UPDATED",
@@ -394,8 +500,18 @@ export const updateSalary = async (id, basicSalary, actor) => {
     throw new AppError(400, "VALIDATION_ERROR", "Basic salary must be greater than 0");
   }
 
-  const employee = await EmployeeModel.findById(id);
-  if (!employee) {
+  const companyId = actor?.companyId;
+  let employee;
+  if (companyId && (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock)) {
+    employee = await EmployeeModel.findOne({ _id: id, companyId });
+  }
+  if (!employee && (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock)) {
+    employee = await EmployeeModel.findById(id);
+  }
+  if (
+    !employee ||
+    (companyId && employee.companyId && String(employee.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Employee not found");
   }
 
@@ -405,6 +521,7 @@ export const updateSalary = async (id, basicSalary, actor) => {
   const after = { basicSalary: employee.basicSalary };
 
   await audit({
+    companyId: companyId || employee.companyId,
     actor,
     actorRole: actor.role,
     action: "EMPLOYEE_SALARY_UPDATED",
@@ -434,8 +551,18 @@ export const updateMyProfile = async (actor, { phone, address }) => {
     );
   }
 
-  const employee = await EmployeeModel.findById(employeeId);
-  if (!employee) {
+  const companyId = actor?.companyId;
+  let employee;
+  if (companyId && (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock)) {
+    employee = await EmployeeModel.findOne({ _id: employeeId, companyId });
+  }
+  if (!employee && (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock)) {
+    employee = await EmployeeModel.findById(employeeId);
+  }
+  if (
+    !employee ||
+    (companyId && employee.companyId && String(employee.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Employee profile not found");
   }
 
@@ -453,6 +580,7 @@ export const updateMyProfile = async (actor, { phone, address }) => {
   const after = { phone: employee.phone, address: employee.address };
 
   await audit({
+    companyId: companyId || employee.companyId,
     actor,
     actorRole: actor.role,
     action: "PROFILE_UPDATED",

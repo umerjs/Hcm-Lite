@@ -17,6 +17,7 @@ import { AuditLogModel } from "../models/audit/index.mjs";
  * @returns {Promise<Object>}
  */
 export const audit = async ({
+  companyId = null,
   actor = null,
   actorRole = null,
   action,
@@ -27,10 +28,14 @@ export const audit = async ({
 }) => {
   let resolvedActorId = null;
   let resolvedRole = actorRole;
+  let resolvedCompanyId = companyId;
 
   if (actor) {
     if (typeof actor === "object" && actor !== null) {
       resolvedActorId = actor._id || actor.id || null;
+      if (!resolvedCompanyId && actor.companyId) {
+        resolvedCompanyId = actor.companyId;
+      }
       if (!resolvedRole && actor.role) {
         resolvedRole = actor.role;
       }
@@ -43,6 +48,11 @@ export const audit = async ({
     resolvedRole = "system";
   }
 
+  // Fallback default dummy companyId if strictly needed
+  if (!resolvedCompanyId) {
+    resolvedCompanyId = new mongoose.Types.ObjectId("000000000000000000000001");
+  }
+
   // Gracefully handle unit tests running without a live MongoDB connection
   if (mongoose.connection.readyState !== 1 && !AuditLogModel.create?.mock) {
     console.log(
@@ -50,6 +60,7 @@ export const audit = async ({
     );
     return {
       _id: new mongoose.Types.ObjectId(),
+      companyId: resolvedCompanyId,
       actor: resolvedActorId,
       actorRole: resolvedRole,
       action,
@@ -62,6 +73,7 @@ export const audit = async ({
   }
 
   const record = await AuditLogModel.create({
+    companyId: resolvedCompanyId,
     actor: resolvedActorId,
     actorRole: resolvedRole,
     action,

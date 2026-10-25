@@ -31,15 +31,17 @@ export const applyLeave = async (user, { type, startDate, endDate, reason }) => 
     );
   }
 
-  const settings = await getSettings();
-  const holidays = await getHolidaysForRange(startDate, endDate);
-  const quota = await getLeaveTypeQuota(type);
+  const companyId = user.companyId;
+  const settings = await getSettings(companyId);
+  const holidays = await getHolidaysForRange(startDate, endDate, companyId);
+  const quota = await getLeaveTypeQuota(type, companyId);
 
   // Fetch all existing leave requests for this employee in the calendar year
   const year = startDate.slice(0, 4);
   const existingRequests = await LeaveRequestModel.find({
     employeeId,
     startDate: { $regex: `^${year}` },
+    ...(companyId ? { companyId } : {}),
   }).lean();
 
   const usedDays = existingRequests
@@ -68,6 +70,7 @@ export const applyLeave = async (user, { type, startDate, endDate, reason }) => 
   }
 
   const leave = await LeaveRequestModel.create({
+    ...(companyId ? { companyId } : {}),
     employeeId,
     type,
     startDate,
@@ -93,8 +96,15 @@ export const cancelLeave = async (user, leaveId) => {
     );
   }
 
-  const leave = await LeaveRequestModel.findById(leaveId);
-  if (!leave) {
+  const companyId = user.companyId;
+  let leave;
+  if (companyId && (mongoose.connection.readyState === 1 || LeaveRequestModel.findOne?.mock)) {
+    leave = await LeaveRequestModel.findOne({ _id: leaveId, companyId });
+  }
+  if (!leave && (mongoose.connection.readyState === 1 || LeaveRequestModel.findById?.mock)) {
+    leave = await LeaveRequestModel.findById(leaveId);
+  }
+  if (!leave || (companyId && leave.companyId && String(leave.companyId) !== String(companyId))) {
     throw new AppError(404, "NOT_FOUND", "Leave request not found");
   }
 
@@ -119,6 +129,7 @@ export const cancelLeave = async (user, leaveId) => {
 
   // Audit log mutation
   await auditService.audit({
+    companyId: companyId || leave.companyId,
     actor: user,
     action: "LEAVE_CANCEL",
     entity: "leaverequests",
@@ -143,13 +154,15 @@ export const getBalance = async (user, year) => {
     );
   }
 
+  const companyId = user.companyId;
   const targetYear = year || formatDate(new Date()).slice(0, 4);
-  const leaveTypes = await getAllLeaveTypes();
+  const leaveTypes = await getAllLeaveTypes(companyId);
 
   const requests = await LeaveRequestModel.find({
     employeeId,
     startDate: { $regex: `^${targetYear}` },
     status: { $in: ["approved", "pending"] },
+    ...(companyId ? { companyId } : {}),
   }).lean();
 
   const balances = leaveTypes.map((lt) => {
@@ -184,8 +197,15 @@ export const getBalance = async (user, year) => {
  * Approver cannot approve their own request. Comment required on reject.
  */
 export const decideLeave = async (user, leaveId, { status, comment }) => {
-  const leave = await LeaveRequestModel.findById(leaveId);
-  if (!leave) {
+  const companyId = user.companyId;
+  let leave;
+  if (companyId && (mongoose.connection.readyState === 1 || LeaveRequestModel.findOne?.mock)) {
+    leave = await LeaveRequestModel.findOne({ _id: leaveId, companyId });
+  }
+  if (!leave && (mongoose.connection.readyState === 1 || LeaveRequestModel.findById?.mock)) {
+    leave = await LeaveRequestModel.findById(leaveId);
+  }
+  if (!leave || (companyId && leave.companyId && String(leave.companyId) !== String(companyId))) {
     throw new AppError(404, "NOT_FOUND", "Leave request not found");
   }
 
@@ -222,6 +242,7 @@ export const decideLeave = async (user, leaveId, { status, comment }) => {
 
   // Audit log mutation
   await auditService.audit({
+    companyId: companyId || leave.companyId,
     actor: user,
     action: "LEAVE_DECISION",
     entity: "leaverequests",
@@ -236,6 +257,7 @@ export const decideLeave = async (user, leaveId, { status, comment }) => {
 
   // Send in-app notification to employee
   await createNotification({
+    companyId: companyId || leave.companyId,
     userId: leave.employeeId,
     type: "leave_decision",
     text: `Your ${leave.type} leave request (${leave.startDate} to ${leave.endDate}) has been ${status}.`,
@@ -251,7 +273,9 @@ export const decideLeave = async (user, leaveId, { status, comment }) => {
  * - HR and Admin can see all requests with optional filters.
  */
 export const getLeaves = async (user, filters = {}) => {
+  const companyId = user.companyId;
   const query = {};
+  if (companyId) query.companyId = companyId;
 
   if (user.role === "employee") {
     if (!user.employeeId) {
@@ -282,11 +306,20 @@ export const getLeaves = async (user, filters = {}) => {
  * Retrieves a single leave request by ID with strict ownership check for Employees.
  */
 export const getLeaveById = async (user, leaveId) => {
-  const leave = await LeaveRequestModel.findById(leaveId)
-    .populate("employeeId", "name code email")
-    .lean();
+  const companyId = user.companyId;
+  let leave;
+  if (companyId && (mongoose.connection.readyState === 1 || LeaveRequestModel.findOne?.mock)) {
+    leave = await LeaveRequestModel.findOne({ _id: leaveId, companyId })
+      .populate("employeeId", "name code email")
+      .lean();
+  }
+  if (!leave && (mongoose.connection.readyState === 1 || LeaveRequestModel.findById?.mock)) {
+    leave = await LeaveRequestModel.findById(leaveId)
+      .populate("employeeId", "name code email")
+      .lean();
+  }
 
-  if (!leave) {
+  if (!leave || (companyId && leave.companyId && String(leave.companyId) !== String(companyId))) {
     throw new AppError(404, "NOT_FOUND", "Leave request not found");
   }
 

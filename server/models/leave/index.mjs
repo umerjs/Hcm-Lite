@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const LeaveRequestSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "employees",
@@ -50,8 +55,8 @@ const LeaveRequestSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Index on { employeeId, startDate } as specified in PRD Section 7
-LeaveRequestSchema.index({ employeeId: 1, startDate: 1 });
+// Index on { companyId, employeeId, startDate } as specified in PRD Section 7
+LeaveRequestSchema.index({ companyId: 1, employeeId: 1, startDate: 1 });
 
 export const LeaveRequestModel =
   mongoose.models.leaverequests || mongoose.model("leaverequests", LeaveRequestSchema);

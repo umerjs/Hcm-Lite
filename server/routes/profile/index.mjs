@@ -15,7 +15,14 @@ router.get(
   "/profile",
   auth,
   asyncHandler(async (req, res) => {
-    const user = await UserModel.findById(req.user._id);
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOne({ _id: req.user._id, companyId });
+    }
+    if (!user) {
+      user = await UserModel.findById(req.user._id);
+    }
     if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
     return res.status(200).json({ data: user });
   }),
@@ -26,8 +33,17 @@ router.get(
   "/profile/:userId",
   auth,
   asyncHandler(async (req, res) => {
-    const user = await UserModel.findById(req.params.userId);
-    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOne({ _id: req.params.userId, companyId });
+    }
+    if (!user) {
+      user = await UserModel.findById(req.params.userId);
+    }
+    if (!user || (companyId && user.companyId && String(user.companyId) !== String(companyId))) {
+      throw new AppError(404, "NOT_FOUND", "User not found");
+    }
     return res.status(200).json({ data: user });
   }),
 );
@@ -38,7 +54,14 @@ router.put(
   auth,
   asyncHandler(async (req, res) => {
     const { firstname, lastname, username } = req.body;
-    const user = await UserModel.findById(req.user._id);
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOne({ _id: req.user._id, companyId });
+    }
+    if (!user) {
+      user = await UserModel.findById(req.user._id);
+    }
     if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
     if (firstname) user.firstname = firstname.trim();
@@ -48,7 +71,11 @@ router.put(
       const trimmed = username?.trim();
       if (!trimmed) throw new AppError(400, "VALIDATION_ERROR", "Username cannot be empty");
 
-      const conflict = await UserModel.findOne({ username: trimmed, _id: { $ne: user._id } });
+      const conflict = await UserModel.findOne({
+        username: trimmed,
+        _id: { $ne: user._id },
+        ...(companyId ? { companyId } : {}),
+      });
       if (conflict) throw new AppError(409, "CONFLICT", "Username already taken");
 
       user.username = trimmed;
@@ -70,7 +97,14 @@ router.put(
     if (!file.mimetype.startsWith("image/"))
       throw new AppError(400, "VALIDATION_ERROR", "Only image files are allowed");
 
-    const user = await UserModel.findById(req.user._id);
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOne({ _id: req.user._id, companyId });
+    }
+    if (!user) {
+      user = await UserModel.findById(req.user._id);
+    }
     if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
 
     const result = await uploadOnCloudinary(file);
@@ -86,7 +120,14 @@ router.delete(
   "/profile",
   auth,
   asyncHandler(async (req, res) => {
-    const user = await UserModel.findByIdAndDelete(req.user._id);
+    const companyId = req.user.companyId;
+    let user;
+    if (companyId) {
+      user = await UserModel.findOneAndDelete({ _id: req.user._id, companyId });
+    }
+    if (!user) {
+      user = await UserModel.findByIdAndDelete(req.user._id);
+    }
     if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
     return res.status(200).json({ message: "Profile deleted" });
   }),

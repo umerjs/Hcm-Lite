@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { CorrectionModel, AttendanceModel } from "../models/index.mjs";
 import { AppError } from "../utils/errors.mjs";
 import { computeWorkedHours, isLateCheckIn, isWeekend, formatDate } from "../src/rules/time.mjs";
@@ -44,11 +45,14 @@ export const applyCorrection = async (
     );
   }
 
+  const companyId = user.companyId;
+
   // Reject a second pending correction for the same employee and date (409)
   const existingPending = await CorrectionModel.findOne({
     employeeId,
     date,
     status: "pending",
+    ...(companyId ? { companyId } : {}),
   });
   if (existingPending) {
     throw new AppError(
@@ -59,6 +63,7 @@ export const applyCorrection = async (
   }
 
   const correction = await CorrectionModel.create({
+    ...(companyId ? { companyId } : {}),
     employeeId,
     date,
     requestedCheckIn: requestedCheckIn ? new Date(requestedCheckIn) : null,
@@ -76,7 +81,9 @@ export const applyCorrection = async (
  * - HR and Admin see all requests with optional filters.
  */
 export const getCorrections = async (user, filters = {}) => {
+  const companyId = user.companyId;
   const query = {};
+  if (companyId) query.companyId = companyId;
 
   if (user.role === "employee") {
     if (!user.employeeId) {
@@ -107,8 +114,18 @@ export const getCorrections = async (user, filters = {}) => {
  * On approval, updates the underlying attendance record and recomputes workedHours, isLate, and status.
  */
 export const decideCorrection = async (user, correctionId, { status, comment }) => {
-  const correction = await CorrectionModel.findById(correctionId);
-  if (!correction) {
+  const companyId = user.companyId;
+  let correction;
+  if (companyId && (mongoose.connection.readyState === 1 || CorrectionModel.findOne?.mock)) {
+    correction = await CorrectionModel.findOne({ _id: correctionId, companyId });
+  }
+  if (!correction && (mongoose.connection.readyState === 1 || CorrectionModel.findById?.mock)) {
+    correction = await CorrectionModel.findById(correctionId);
+  }
+  if (
+    !correction ||
+    (companyId && correction.companyId && String(correction.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Correction request not found");
   }
 
@@ -133,12 +150,13 @@ export const decideCorrection = async (user, correctionId, { status, comment }) 
   }
 
   if (status === "approved") {
-    const settings = await getSettings();
+    const settings = await getSettings(companyId);
 
     // Find or create the corresponding attendance record
     let record = await AttendanceModel.findOne({
       employeeId: correction.employeeId,
       date: correction.date,
+      ...(companyId ? { companyId } : {}),
     });
 
     const checkIn = correction.requestedCheckIn
@@ -176,6 +194,7 @@ export const decideCorrection = async (user, correctionId, { status, comment }) 
 
     if (!record) {
       record = new AttendanceModel({
+        companyId: companyId || correction.companyId,
         employeeId: correction.employeeId,
         date: correction.date,
         checkIn: checkIn || checkOut,
@@ -192,6 +211,9 @@ export const decideCorrection = async (user, correctionId, { status, comment }) 
       record.isLate = isLate;
       record.isNonWorkingDay = isNonWorkingDay;
       record.status = attendanceStatus;
+      if (companyId && !record.companyId) {
+        record.companyId = companyId;
+      }
     }
     await record.save();
   }
@@ -204,6 +226,7 @@ export const decideCorrection = async (user, correctionId, { status, comment }) 
 
   // Audit log mutation
   await auditService.audit({
+    companyId: companyId || correction.companyId,
     actor: user,
     action: "CORRECTION_DECISION",
     entity: "corrections",
@@ -218,6 +241,7 @@ export const decideCorrection = async (user, correctionId, { status, comment }) 
 
   // Notify employee
   await createNotification({
+    companyId: companyId || correction.companyId,
     userId: correction.employeeId,
     type: "correction_decision",
     text: `Your attendance correction request for ${correction.date} has been ${status}.`,

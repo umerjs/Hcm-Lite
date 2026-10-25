@@ -14,6 +14,7 @@ import * as leaveService from "../services/leave.service.mjs";
 process.env.JWT_SECRET = process.env.JWT_SECRET || "hcm_lite_test_secret_32_characters_long";
 
 describe("Slice B4: Analytics & Metrics API", () => {
+  const companyId = "671a11112222333344449999";
   const adminId = "671a11112222333344440001";
   const hrId = "671a11112222333344440002";
   const employeeUserId = "671a11112222333344440003";
@@ -28,23 +29,25 @@ describe("Slice B4: Analytics & Metrics API", () => {
     vi.restoreAllMocks();
 
     adminToken = jwt.sign(
-      { _id: adminId, role: "admin", email: "admin@company.com" },
+      { _id: adminId, role: "admin", email: "admin@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign({ _id: hrId, role: "hr", email: "hr@company.com" }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    hrToken = jwt.sign(
+      { _id: hrId, role: "hr", email: "hr@company.com", companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
 
     employeeToken = jwt.sign(
-      { _id: employeeUserId, role: "employee", email: "emp@company.com" },
+      { _id: employeeUserId, role: "employee", email: "emp@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
     userWithoutEmpToken = jwt.sign(
-      { _id: "671a11112222333344440099", role: "employee", email: "noemp@company.com" },
+      { _id: "671a11112222333344440099", role: "employee", email: "noemp@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -72,6 +75,7 @@ describe("Slice B4: Analytics & Metrics API", () => {
 
       const mockDoc = {
         _id: id,
+        companyId,
         email,
         role,
         employeeId: empId,
@@ -91,7 +95,7 @@ describe("Slice B4: Analytics & Metrics API", () => {
     it("aggregates the exact counts needed for HrDashboardResponse", async () => {
       // Mock employee counts
       vi.spyOn(EmployeeModel, "countDocuments").mockImplementation((filter) => {
-        if (!filter || Object.keys(filter).length === 0) {
+        if (!filter || !filter.status) {
           return Promise.resolve(10); // totalEmployees = 10
         }
         if (filter.status) {

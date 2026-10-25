@@ -14,17 +14,19 @@ import * as leaveService from "./leave.service.mjs";
  * @param {string} [date] - YYYY-MM-DD (defaults to today in Asia/Karachi)
  * @returns {Promise<Object>} HrDashboardResponse
  */
-export const getHrMetrics = async (date) => {
+export const getHrMetrics = async (date, actor = null) => {
   const targetDate = date || formatDate(new Date());
+  const companyId = actor?.companyId;
 
   // 1. Employee counts
   let totalEmployees = 0;
   let activeEmployees = 0;
 
   if (mongoose.connection.readyState === 1 || EmployeeModel.countDocuments?.mock) {
-    totalEmployees = await EmployeeModel.countDocuments();
+    totalEmployees = await EmployeeModel.countDocuments(companyId ? { companyId } : {});
     activeEmployees = await EmployeeModel.countDocuments({
       status: { $in: ["active", "probation"] },
+      ...(companyId ? { companyId } : {}),
     });
   }
 
@@ -34,7 +36,10 @@ export const getHrMetrics = async (date) => {
   let explicitAbsent = 0;
 
   if (mongoose.connection.readyState === 1 || AttendanceModel.find?.mock) {
-    const records = await AttendanceModel.find({ date: targetDate }).lean();
+    const records = await AttendanceModel.find({
+      date: targetDate,
+      ...(companyId ? { companyId } : {}),
+    }).lean();
     for (const r of records) {
       if (r.status === "present" || r.status === "half_day" || r.checkIn) {
         present++;
@@ -55,6 +60,7 @@ export const getHrMetrics = async (date) => {
       status: "approved",
       startDate: { $lte: targetDate },
       endDate: { $gte: targetDate },
+      ...(companyId ? { companyId } : {}),
     }).lean();
     if (approvedLeaves && approvedLeaves.length > 0) {
       const distinctEmpIds = new Set(approvedLeaves.map((l) => String(l.employeeId)));
@@ -69,12 +75,18 @@ export const getHrMetrics = async (date) => {
   // 4. Pending leaves & corrections
   let pendingLeaves = 0;
   if (mongoose.connection.readyState === 1 || LeaveRequestModel.countDocuments?.mock) {
-    pendingLeaves = await LeaveRequestModel.countDocuments({ status: "pending" });
+    pendingLeaves = await LeaveRequestModel.countDocuments({
+      status: "pending",
+      ...(companyId ? { companyId } : {}),
+    });
   }
 
   let pendingCorrections = 0;
   if (mongoose.connection.readyState === 1 || CorrectionModel.countDocuments?.mock) {
-    pendingCorrections = await CorrectionModel.countDocuments({ status: "pending" });
+    pendingCorrections = await CorrectionModel.countDocuments({
+      status: "pending",
+      ...(companyId ? { companyId } : {}),
+    });
   }
 
   return {
@@ -96,11 +108,13 @@ export const getHrMetrics = async (date) => {
  *
  * @param {string|mongoose.Types.ObjectId} employeeId
  * @param {string} [month] - Format YYYY-MM
+ * @param {Object} [actor] - Authenticated user context
  * @returns {Promise<Object>} EmployeeDashboardResponse
  */
-export const getEmployeeMetrics = async (employeeId, month) => {
+export const getEmployeeMetrics = async (employeeId, month, actor = null) => {
   const targetMonth = month || formatDate(new Date()).slice(0, 7);
   const targetYear = targetMonth.slice(0, 4);
+  const companyId = actor?.companyId;
 
   // 1. Current month attendance stats
   let present = 0;
@@ -111,6 +125,7 @@ export const getEmployeeMetrics = async (employeeId, month) => {
     const records = await AttendanceModel.find({
       employeeId,
       date: { $regex: `^${targetMonth}` },
+      ...(companyId ? { companyId } : {}),
     }).lean();
 
     for (const r of records) {
@@ -129,7 +144,7 @@ export const getEmployeeMetrics = async (employeeId, month) => {
   // 2. Leave balances (annual, sick, casual)
   let leaveBalances = { annual: 14, sick: 8, casual: 10 };
   try {
-    const balanceResult = await leaveService.getBalance({ employeeId }, targetYear);
+    const balanceResult = await leaveService.getBalance({ employeeId, companyId }, targetYear);
     if (balanceResult && balanceResult.balances) {
       const balanceMap = new Map(balanceResult.balances.map((b) => [b.type, b.remaining]));
       leaveBalances = {
@@ -146,6 +161,7 @@ export const getEmployeeMetrics = async (employeeId, month) => {
     pendingLeaves = await LeaveRequestModel.countDocuments({
       employeeId,
       status: "pending",
+      ...(companyId ? { companyId } : {}),
     });
   }
 
@@ -154,6 +170,7 @@ export const getEmployeeMetrics = async (employeeId, month) => {
     pendingCorrections = await CorrectionModel.countDocuments({
       employeeId,
       status: "pending",
+      ...(companyId ? { companyId } : {}),
     });
   }
 

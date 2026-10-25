@@ -2,11 +2,15 @@ import mongoose from "mongoose";
 
 const NotificationSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
       required: true,
-      index: true,
     },
     type: {
       type: String,
@@ -30,13 +34,18 @@ const NotificationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-NotificationSchema.index({ userId: 1, readAt: 1 });
+NotificationSchema.index({ companyId: 1, userId: 1, readAt: 1 });
 
 export const NotificationModel =
   mongoose.models.notifications || mongoose.model("notifications", NotificationSchema);
 
 const AnnouncementSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     title: {
       type: String,
       required: true,
@@ -61,7 +70,7 @@ const AnnouncementSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-AnnouncementSchema.index({ createdAt: -1 });
+AnnouncementSchema.index({ companyId: 1, createdAt: -1 });
 
 export const AnnouncementModel =
   mongoose.models.announcements || mongoose.model("announcements", AnnouncementSchema);

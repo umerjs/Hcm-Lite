@@ -41,6 +41,7 @@ router.post(
     }
 
     const result = await aiService.processChat({
+      companyId: req.user.companyId,
       userId: req.user._id,
       role: req.user.role,
       employeeId: req.user.employeeId,

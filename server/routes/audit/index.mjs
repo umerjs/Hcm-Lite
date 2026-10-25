@@ -21,7 +21,9 @@ router.get(
     const p = Math.max(1, parseInt(page, 10) || 1);
     const size = Math.min(50, Math.max(1, parseInt(limit || pageSize, 10) || 20));
 
-    const filter = {};
+    const filter = {
+      companyId: req.user.companyId,
+    };
     if (action && action.trim()) {
       filter.action = action.trim();
     }

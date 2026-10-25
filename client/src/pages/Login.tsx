@@ -3,23 +3,21 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { http, extractErrorMessage } from "../api/http";
 import { useAuth } from "../context/AuthContext";
 import type { LoginResponse } from "../types/api";
-import { RotateCcw, Database, Sparkles, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, mustChangePassword, isSetup, checkSetupStatus } = useAuth();
+  const { login, isAuthenticated, mustChangePassword } = useAuth();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [infoMsg, setInfoMsg] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isResetting, setIsResetting] = useState<boolean>(false);
-  const [isSeeding, setIsSeeding] = useState<boolean>(false);
 
   useEffect(() => {
-    // If arriving from setup with message / prefilled email
+    // If arriving from registration with message / prefilled email
     if (location.state?.message) {
       setInfoMsg(location.state.message);
     }
@@ -81,44 +79,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleFillCredentials = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMsg("");
-  };
-
-  const handleResetToEmpty = async () => {
-    setErrorMsg("");
-    setInfoMsg("");
-    setIsResetting(true);
-    try {
-      await http.post("/setup/reset");
-      await checkSetupStatus();
-      navigate("/setup", { replace: true });
-    } catch (err: unknown) {
-      setErrorMsg(extractErrorMessage(err, "Failed to reset database."));
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
-  const handleReloadDemoData = async () => {
-    setErrorMsg("");
-    setInfoMsg("");
-    setIsSeeding(true);
-    try {
-      await http.post("/setup/seed");
-      await checkSetupStatus();
-      setInfoMsg("Saylani demo dataset reloaded with fresh Admin, HR, and Employee records.");
-      setEmail("admin@saylani.org");
-      setPassword("AdminPassword123!");
-    } catch (err: unknown) {
-      setErrorMsg(extractErrorMessage(err, "Failed to reload demo dataset."));
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:py-12 flex items-center justify-center">
       <div className="w-full max-w-lg">
@@ -131,7 +91,7 @@ export const Login: React.FC = () => {
               Sign In to HCM Lite
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Saylani Hackathon 2026 Enterprise Management Portal
+              Multi-Tenant Enterprise Management Portal
             </p>
           </div>
 
@@ -154,10 +114,10 @@ export const Login: React.FC = () => {
               </label>
               <input
                 type="email"
-                placeholder="name@saylani.org"
+                placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading || isResetting || isSeeding}
+                disabled={isLoading}
                 autoComplete="email"
                 className="w-full h-10 px-3 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
               />
@@ -170,7 +130,7 @@ export const Login: React.FC = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading || isResetting || isSeeding}
+                disabled={isLoading}
                 autoComplete="current-password"
                 className="w-full h-10 px-3 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
               />
@@ -178,136 +138,21 @@ export const Login: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isLoading || isResetting || isSeeding}
+              disabled={isLoading}
               className="w-full h-11 mt-2 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center shadow-sm cursor-pointer"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          {/* ── Hackathon Demo Quick-Fill Credentials ───────────────────────── */}
-          <div className="mt-6 pt-5 border-t border-border">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Hackathon Demo Credentials
-              </span>
-              <span className="text-[10px] text-muted-foreground/80 font-medium">
-                Click any role to 1-click autofill
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillCredentials("admin@saylani.org", "AdminPassword123!")}
-                className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/70 text-left transition-colors cursor-pointer group hover:border-primary/40"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-foreground group-hover:text-primary">
-                    Admin
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">
-                    FULL ACCESS
-                  </span>
-                </div>
-                <div className="text-[11px] font-medium text-foreground/90 truncate">
-                  admin@saylani.org
-                </div>
-                <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                  AdminPassword123!
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleFillCredentials("hr@saylani.org", "HrPassword123!")}
-                className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/70 text-left transition-colors cursor-pointer group hover:border-blue-500/40"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-foreground group-hover:text-blue-500">
-                    HR Manager
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold">
-                    HR
-                  </span>
-                </div>
-                <div className="text-[11px] font-medium text-foreground/90 truncate">
-                  hr@saylani.org
-                </div>
-                <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                  HrPassword123!
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleFillCredentials("emp@saylani.org", "EmpPassword123!")}
-                className="p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/70 text-left transition-colors cursor-pointer group hover:border-amber-500/40"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-foreground group-hover:text-amber-500">
-                    Employee
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
-                    EMP
-                  </span>
-                </div>
-                <div className="text-[11px] font-medium text-foreground/90 truncate">
-                  emp@saylani.org
-                </div>
-                <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                  EmpPassword123!
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* ── Evaluator Controls: Wipe to Empty OR Re-Seed ───────────────── */}
-          <div className="mt-5 pt-4 border-t border-border">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-primary" />
-                Hackathon Challenge Evaluator Controls
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleResetToEmpty}
-                disabled={isResetting || isSeeding}
-                className="p-2.5 rounded-xl border border-destructive/30 bg-destructive/5 hover:bg-destructive/10 text-destructive text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? "animate-spin" : ""}`} />
-                {isResetting ? "Wiping Database..." : "Reset to Empty DB (/setup)"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleReloadDemoData}
-                disabled={isResetting || isSeeding}
-                className="p-2.5 rounded-xl border border-border bg-muted/40 hover:bg-muted/80 text-foreground text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Database className={`w-3.5 h-3.5 ${isSeeding ? "animate-pulse" : ""}`} />
-                {isSeeding ? "Seeding..." : "Reload Demo Data"}
-              </button>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-2 text-center">
-              Testing the challenge's <em>"system starts empty"</em> rule? Click{" "}
-              <strong>Reset to Empty DB</strong> to test the first-run wizard afresh.
+          <div className="mt-5 pt-4 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground">
+              Don&apos;t have an organization account?{" "}
+              <Link to="/register" className="font-semibold text-primary hover:underline">
+                Create an Account
+              </Link>
             </p>
           </div>
-
-          {isSetup === false && (
-            <div className="mt-5 pt-4 border-t border-border text-center">
-              <p className="text-xs text-muted-foreground">
-                First time booting up?{" "}
-                <Link to="/setup" className="font-semibold text-primary hover:underline">
-                  Run First-Time Setup Wizard
-                </Link>
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

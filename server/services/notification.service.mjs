@@ -13,10 +13,19 @@ import { audit } from "./audit.service.mjs";
  * @param {string|null} [params.link=null]
  * @returns {Promise<Object>}
  */
-export const createNotification = async ({ userId, type = "general", text, link = null }) => {
+export const createNotification = async ({
+  companyId = null,
+  userId,
+  type = "general",
+  text,
+  link = null,
+}) => {
   if (!userId || !text) {
     throw new AppError(400, "VALIDATION_ERROR", "User ID and notification text are required");
   }
+
+  const resolvedCompanyId =
+    companyId || (userId?.companyId ? userId.companyId : null);
 
   if (mongoose.connection.readyState !== 1 && !NotificationModel.create?.mock) {
     console.log(
@@ -24,6 +33,7 @@ export const createNotification = async ({ userId, type = "general", text, link 
     );
     return {
       _id: new mongoose.Types.ObjectId(),
+      companyId: resolvedCompanyId,
       userId,
       type,
       text,
@@ -34,6 +44,7 @@ export const createNotification = async ({ userId, type = "general", text, link 
   }
 
   const notification = await NotificationModel.create({
+    ...(resolvedCompanyId ? { companyId: resolvedCompanyId } : {}),
     userId,
     type,
     text,
@@ -58,6 +69,7 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
     throw new AppError(400, "VALIDATION_ERROR", "Announcement body is required");
   }
 
+  const companyId = actor?.companyId;
   const validTargetRoles = ["all", "employee", "hr", "admin"];
   const resolvedTargetRole = validTargetRoles.includes(targetRole) ? targetRole : "all";
 
@@ -66,6 +78,7 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
     : "Management";
 
   const announcement = await AnnouncementModel.create({
+    ...(companyId ? { companyId } : {}),
     title: title.trim(),
     body: body.trim(),
     postedBy: {
@@ -78,7 +91,10 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
 
   // Fan out targeted notifications to active users matching targetRole
   try {
-    const userFilter = { isActive: true };
+    const userFilter = {
+      isActive: true,
+      ...(companyId ? { companyId } : {}),
+    };
     if (resolvedTargetRole !== "all") {
       userFilter.role = resolvedTargetRole;
     }
@@ -87,6 +103,7 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
       const users = await UserModel.find(userFilter).select("_id").lean();
       if (users && users.length > 0) {
         const notifications = users.map((u) => ({
+          ...(companyId ? { companyId } : {}),
           userId: u._id,
           type: "announcement",
           text: `Announcement: ${title.trim()}`,
@@ -107,6 +124,7 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
   }
 
   await audit({
+    companyId: companyId || announcement.companyId,
     actor,
     actorRole: actor?.role || "system",
     action: "ANNOUNCEMENT_CREATED",
@@ -127,7 +145,10 @@ export const createAnnouncement = async ({ title, body, targetRole = "all" }, ac
  * Retrieves announcements visible to the user.
  */
 export const getAnnouncements = async (user = null) => {
+  const companyId = user?.companyId;
   const filter = {};
+  if (companyId) filter.companyId = companyId;
+
   if (user && user.role && user.role !== "admin") {
     filter.targetRole = { $in: ["all", user.role] };
   }
@@ -142,8 +163,12 @@ export const getAnnouncements = async (user = null) => {
 /**
  * Retrieves notifications for a specific user.
  */
-export const getNotifications = async (userId, { unreadOnly = false } = {}) => {
+export const getNotifications = async (
+  userId,
+  { unreadOnly = false, companyId = null } = {},
+) => {
   const filter = { userId };
+  if (companyId) filter.companyId = companyId;
   if (unreadOnly) {
     filter.readAt = null;
   }
@@ -158,12 +183,15 @@ export const getNotifications = async (userId, { unreadOnly = false } = {}) => {
 /**
  * Marks a specific notification as read.
  */
-export const markNotificationAsRead = async (id, userId) => {
+export const markNotificationAsRead = async (id, userId, companyId = null) => {
   if (mongoose.connection.readyState !== 1 && !NotificationModel.findOne?.mock) {
     return { _id: id, userId, readAt: new Date() };
   }
 
-  const notification = await NotificationModel.findOne({ _id: id, userId });
+  const query = { _id: id, userId };
+  if (companyId) query.companyId = companyId;
+
+  const notification = await NotificationModel.findOne(query);
   if (!notification) {
     throw new AppError(404, "NOT_FOUND", "Notification not found");
   }
@@ -177,9 +205,12 @@ export const markNotificationAsRead = async (id, userId) => {
 /**
  * Marks all notifications for a user as read.
  */
-export const markAllNotificationsAsRead = async (userId) => {
+export const markAllNotificationsAsRead = async (userId, companyId = null) => {
+  const query = { userId, readAt: null };
+  if (companyId) query.companyId = companyId;
+
   if (mongoose.connection.readyState === 1 || NotificationModel.updateMany?.mock) {
-    await NotificationModel.updateMany({ userId, readAt: null }, { $set: { readAt: new Date() } });
+    await NotificationModel.updateMany(query, { $set: { readAt: new Date() } });
   }
 
   return { message: "All notifications marked as read" };

@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const AuditLogSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     actor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
@@ -76,9 +81,9 @@ for (const method of queryMutationMethods) {
 AuditLogSchema.statics.bulkWrite = prohibitedMutation;
 
 // Indexes for audit querying
-AuditLogSchema.index({ entity: 1, entityId: 1 });
-AuditLogSchema.index({ createdAt: -1 });
-AuditLogSchema.index({ actor: 1 });
+AuditLogSchema.index({ companyId: 1, entity: 1, entityId: 1 });
+AuditLogSchema.index({ companyId: 1, createdAt: -1 });
+AuditLogSchema.index({ companyId: 1, actor: 1 });
 
 export const AuditLogModel =
   mongoose.models.auditlogs || mongoose.model("auditlogs", AuditLogSchema);

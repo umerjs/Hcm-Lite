@@ -5,7 +5,14 @@ import { http } from "../api/http";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import Input from "../components/Input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import EmptyState from "../components/shared/EmptyState";
 import Loading from "../components/shared/Loading";
 import type {
@@ -29,7 +36,9 @@ export function AnnouncementsPage() {
   const announcements = useQuery({
     queryKey: ["announcements"],
     queryFn: async () =>
-      unwrap<Announcement[]>((await http.get<AnnouncementsResponse | Announcement[]>("/announcements")).data),
+      unwrap<Announcement[]>(
+        (await http.get<AnnouncementsResponse | Announcement[]>("/announcements")).data,
+      ),
   });
 
   const post = useMutation({
@@ -82,7 +91,11 @@ export function AnnouncementsPage() {
               onChange={(e) => setBody(e.target.value)}
               className="text-xs sm:text-sm"
             />
-            <Button type="submit" disabled={post.isPending} className="bg-emerald-600 text-white hover:bg-emerald-700">
+            <Button
+              type="submit"
+              disabled={post.isPending}
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+            >
               <Send className="mr-1.5 size-4" />
               {post.isPending ? "Posting..." : "Post"}
             </Button>
@@ -93,7 +106,9 @@ export function AnnouncementsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent announcements</CardTitle>
-          <CardDescription>Latest company broadcasts in reverse chronological order.</CardDescription>
+          <CardDescription>
+            Latest company broadcasts in reverse chronological order.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {announcements.isLoading ? (
@@ -107,7 +122,10 @@ export function AnnouncementsPage() {
             />
           ) : (
             announcementList.map((item) => (
-              <article key={item._id} className="rounded-xl border border-border p-4 hover:bg-muted/20 transition-colors">
+              <article
+                key={item._id}
+                className="rounded-xl border border-border p-4 hover:bg-muted/20 transition-colors"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="font-semibold text-xs sm:text-sm">{item.title}</h2>
                   <time className="text-[11px] text-muted-foreground shrink-0">
@@ -130,7 +148,9 @@ export function NotificationsPage() {
   const notifications = useQuery({
     queryKey: ["notifications", "unread"],
     queryFn: async () =>
-      unwrap<Notification[]>((await http.get<NotificationsResponse | Notification[]>("/notifications?unread=true")).data),
+      unwrap<Notification[]>(
+        (await http.get<NotificationsResponse | Notification[]>("/notifications?unread=true")).data,
+      ),
   });
 
   const notificationList = notifications.data ?? [];
@@ -140,7 +160,9 @@ export function NotificationsPage() {
       <header>
         <p className="text-xs sm:text-sm font-medium text-emerald-600">Personal alerts</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Notifications</h1>
-        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">Unread alerts, workflow approvals, and updates.</p>
+        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+          Unread alerts, workflow approvals, and updates.
+        </p>
       </header>
 
       <Card>
@@ -181,7 +203,9 @@ export function AuditPage() {
   const audit = useQuery({
     queryKey: ["audit"],
     queryFn: async () =>
-      unwrap<AuditLogItem[]>((await http.get<GetAuditLogsResponse | AuditLogItem[]>("/audit")).data),
+      unwrap<AuditLogItem[]>(
+        (await http.get<GetAuditLogsResponse | AuditLogItem[]>("/audit")).data,
+      ),
   });
 
   const auditList = audit.data ?? [];

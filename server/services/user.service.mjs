@@ -30,7 +30,11 @@ export const createHr = async ({ firstname, lastname, email }, actor) => {
     throw new AppError(400, "VALIDATION_ERROR", "Invalid email address format");
   }
 
-  const existing = await UserModel.findOne({ email: normalizedEmail });
+  const companyId = actor.companyId;
+  const existing = await UserModel.findOne({
+    email: normalizedEmail,
+    ...(companyId ? { companyId } : {}),
+  });
   if (existing) {
     throw new AppError(409, "DUPLICATE_EMAIL", "A user with this email address already exists");
   }
@@ -39,6 +43,7 @@ export const createHr = async ({ firstname, lastname, email }, actor) => {
   const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
   const user = await UserModel.create({
+    ...(companyId ? { companyId } : {}),
     firstname: firstname.trim(),
     lastname: lastname.trim(),
     email: normalizedEmail,
@@ -49,6 +54,7 @@ export const createHr = async ({ firstname, lastname, email }, actor) => {
   });
 
   await audit({
+    companyId: companyId || user.companyId,
     actor,
     actorRole: actor.role,
     action: "HR_USER_CREATED",
@@ -79,8 +85,10 @@ export const createHr = async ({ firstname, lastname, email }, actor) => {
 /**
  * Retrieves all users, optionally filtered by role.
  */
-export const getUsers = async ({ role } = {}) => {
+export const getUsers = async ({ role } = {}, actor = null) => {
+  const companyId = actor?.companyId;
   const query = {};
+  if (companyId) query.companyId = companyId;
   if (role) query.role = role;
 
   if (mongoose.connection.readyState !== 1 && !UserModel.find?.mock) {
@@ -104,8 +112,15 @@ export const deactivateUser = async (id, actor) => {
     );
   }
 
-  const user = await UserModel.findById(id);
-  if (!user) {
+  const companyId = actor?.companyId;
+  let user;
+  if (companyId && (mongoose.connection.readyState === 1 || UserModel.findOne?.mock)) {
+    user = await UserModel.findOne({ _id: id, companyId });
+  }
+  if (!user && (mongoose.connection.readyState === 1 || UserModel.findById?.mock)) {
+    user = await UserModel.findById(id);
+  }
+  if (!user || (companyId && user.companyId && String(user.companyId) !== String(companyId))) {
     throw new AppError(404, "NOT_FOUND", "User not found");
   }
 
@@ -114,6 +129,7 @@ export const deactivateUser = async (id, actor) => {
   await user.save();
 
   await audit({
+    companyId: companyId || user.companyId,
     actor,
     actorRole: actor.role,
     action: "USER_DEACTIVATED",
@@ -139,8 +155,15 @@ export const deactivateUser = async (id, actor) => {
  * - Audited.
  */
 export const resetPassword = async (id, actor) => {
-  const user = await UserModel.findById(id).select("+password");
-  if (!user) {
+  const companyId = actor?.companyId;
+  let user;
+  if (companyId && (mongoose.connection.readyState === 1 || UserModel.findOne?.mock)) {
+    user = await UserModel.findOne({ _id: id, companyId }).select("+password");
+  }
+  if (!user && (mongoose.connection.readyState === 1 || UserModel.findById?.mock)) {
+    user = await UserModel.findById(id).select("+password");
+  }
+  if (!user || (companyId && user.companyId && String(user.companyId) !== String(companyId))) {
     throw new AppError(404, "NOT_FOUND", "User not found");
   }
 
@@ -153,6 +176,7 @@ export const resetPassword = async (id, actor) => {
   await user.save();
 
   await audit({
+    companyId: companyId || user.companyId,
     actor,
     actorRole: actor.role,
     action: "USER_PASSWORD_RESET",

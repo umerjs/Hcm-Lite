@@ -107,7 +107,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const result = await employeeService.getEmployees(req.query);
+    const result = await employeeService.getEmployees(req.query, req.user);
     return res.status(200).json(result);
   }),
 );

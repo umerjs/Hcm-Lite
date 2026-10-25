@@ -1,3 +1,4 @@
+export { CompanyModel } from "./company/index.mjs";
 export { UserModel } from "./auth/index.mjs";
 export { AttendanceModel } from "./attendance/index.mjs";
 export { SettingsModel } from "./settings/index.mjs";

@@ -50,15 +50,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 Something went wrong
               </h1>
               <p className="text-sm text-muted-foreground">
-                An unexpected application error occurred while rendering this view. Your session and saved data are safe.
+                An unexpected application error occurred while rendering this view. Your session and
+                saved data are safe.
               </p>
             </div>
 
             {this.state.error && (
               <div className="p-3.5 rounded-xl bg-muted/60 border border-border text-left font-mono text-xs text-muted-foreground overflow-x-auto max-h-36">
-                <span className="font-semibold text-destructive">
-                  {this.state.error.name}:
-                </span>{" "}
+                <span className="font-semibold text-destructive">{this.state.error.name}:</span>{" "}
                 {this.state.error.message}
               </div>
             )}

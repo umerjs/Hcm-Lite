@@ -9,6 +9,7 @@ import * as leaveService from "../services/leave.service.mjs";
 process.env.JWT_SECRET = process.env.JWT_SECRET || "hcm_lite_test_secret_32_characters_long";
 
 describe("Slice B5: AI Chat & Smart Leave API", () => {
+  const companyId = "671a11112222333344449999";
   const employeeUserId = "671a11112222333344440003";
   const employeeId = "671a11112222333344440004";
   const rateLimitUserId = "671a11112222333344440088";
@@ -21,13 +22,13 @@ describe("Slice B5: AI Chat & Smart Leave API", () => {
     vi.restoreAllMocks();
 
     employeeToken = jwt.sign(
-      { _id: employeeUserId, role: "employee", email: "emp@company.com" },
+      { _id: employeeUserId, role: "employee", email: "emp@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
     rateLimitToken = jwt.sign(
-      { _id: rateLimitUserId, role: "employee", email: "rate@company.com" },
+      { _id: rateLimitUserId, role: "employee", email: "rate@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -38,6 +39,7 @@ describe("Slice B5: AI Chat & Smart Leave API", () => {
       const isRateLimitUser = idStr === rateLimitUserId;
       const mockDoc = {
         _id: id,
+        companyId,
         email: isRateLimitUser ? "rate@company.com" : "emp@company.com",
         role: "employee",
         employeeId: isRateLimitUser ? "671a11112222333344440089" : employeeId,

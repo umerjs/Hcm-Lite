@@ -1,11 +1,11 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { UserModel } from "../../models/index.mjs";
 import { requireAuth } from "../../middlewares/index.mjs";
 import { AppError, asyncHandler } from "../../utils/errors.mjs";
 import { emailPattern } from "../../utils/core.mjs";
+import { generateToken, registerTenant } from "../../services/auth.service.mjs";
 
 const router = express.Router();
 
@@ -26,8 +26,24 @@ export const loginLimiter = rateLimit({
   },
 });
 
+// ── POST /api/v1/auth/register ─────────────────────────────────────────────
+// Public tenant registration. Provisions a new company, admin, leave types, and settings.
+router.post(
+  "/auth/register",
+  asyncHandler(async (req, res) => {
+    const { companyName, adminName, adminEmail, adminPassword } = req.body;
+    const result = await registerTenant({
+      companyName,
+      adminName,
+      adminEmail,
+      adminPassword,
+    });
+    return res.status(201).json(result);
+  }),
+);
+
 // ── POST /api/v1/auth/login ────────────────────────────────────────────────
-// Public. No signup: Admin is created by /setup, HR by Admin, Employees by HR.
+// Public. Authenticates user and returns JWT with tenant companyId.
 router.post(
   "/auth/login",
   loginLimiter,
@@ -65,16 +81,13 @@ router.post(
       throw new AppError(401, "INVALID_CREDENTIALS", "Invalid email or password");
     }
 
-    const token = jwt.sign(
-      { _id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "8h" },
-    );
+    const token = generateToken(user);
 
     return res.status(200).json({
       token,
       user: {
         id: user._id,
+        companyId: user.companyId,
         email: user.email,
         role: user.role,
         employeeId: user.employeeId,
@@ -137,17 +150,14 @@ router.post(
     user.mustChangePassword = false;
     await user.save();
 
-    const token = jwt.sign(
-      { _id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "8h" },
-    );
+    const token = generateToken(user);
 
     return res.status(200).json({
       message: "Password changed successfully",
       token,
       user: {
         id: user._id,
+        companyId: user.companyId,
         email: user.email,
         role: user.role,
         employeeId: user.employeeId,

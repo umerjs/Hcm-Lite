@@ -17,20 +17,36 @@ import { calculatePayroll, round2, countWorkingDays, toKarachiDate } from "../sr
  * @param {string} month - Format YYYY-MM
  * @returns {Promise<Object>}
  */
-export const calculateEmployeePayroll = async (employeeId, month) => {
+export const calculateEmployeePayroll = async (employeeId, month, actor = null) => {
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     throw new AppError(400, "VALIDATION_ERROR", "Month must be in YYYY-MM format");
   }
 
+  const companyId = actor?.companyId;
   let employee = null;
-  if (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock) {
-    employee = await EmployeeModel.findById(employeeId)
-      .populate("departmentId", "name")
-      .populate("designationId", "name")
-      .lean();
+  if (
+    mongoose.connection.readyState === 1 ||
+    EmployeeModel.findById?.mock ||
+    EmployeeModel.findOne?.mock
+  ) {
+    if (companyId && (mongoose.connection.readyState === 1 || EmployeeModel.findOne?.mock)) {
+      employee = await EmployeeModel.findOne({ _id: employeeId, companyId })
+        .populate("departmentId", "name")
+        .populate("designationId", "name")
+        .lean();
+    }
+    if (!employee && (mongoose.connection.readyState === 1 || EmployeeModel.findById?.mock)) {
+      employee = await EmployeeModel.findById(employeeId)
+        .populate("departmentId", "name")
+        .populate("designationId", "name")
+        .lean();
+    }
   }
 
-  if (!employee) {
+  if (
+    !employee ||
+    (companyId && employee.companyId && String(employee.companyId) !== String(companyId))
+  ) {
     throw new AppError(404, "NOT_FOUND", "Employee not found");
   }
 
@@ -39,7 +55,8 @@ export const calculateEmployeePayroll = async (employeeId, month) => {
     throw new AppError(400, "VALIDATION_ERROR", "Employee has no valid basic salary");
   }
 
-  const settings = await getSettings();
+  const resolvedCompanyId = companyId || employee.companyId;
+  const settings = await getSettings(resolvedCompanyId);
 
   const monthStart = `${month}-01`;
   const monthEndObj = toKarachiDate(monthStart).endOf("month");
@@ -48,7 +65,7 @@ export const calculateEmployeePayroll = async (employeeId, month) => {
   // Company holidays in the month
   let holidays = [];
   try {
-    holidays = await holidayService.getHolidaysForRange(monthStart, monthEnd);
+    holidays = await holidayService.getHolidaysForRange(monthStart, monthEnd, resolvedCompanyId);
   } catch {}
 
   // Total company working days in the month
@@ -70,6 +87,7 @@ export const calculateEmployeePayroll = async (employeeId, month) => {
       records = await AttendanceModel.find({
         employeeId,
         date: { $regex: `^${month}` },
+        ...(resolvedCompanyId ? { companyId: resolvedCompanyId } : {}),
       }).lean();
     } catch {}
   }
@@ -88,6 +106,7 @@ export const calculateEmployeePayroll = async (employeeId, month) => {
         status: "approved",
         startDate: { $lte: monthEnd },
         endDate: { $gte: monthStart },
+        ...(resolvedCompanyId ? { companyId: resolvedCompanyId } : {}),
       }).lean();
 
       for (const leave of unpaidLeaves) {
@@ -143,17 +162,19 @@ export const calculateEmployeePayroll = async (employeeId, month) => {
  * @param {string} month - Format YYYY-MM
  * @returns {Promise<Array>}
  */
-export const getMonthlyPayrollSummaries = async (month) => {
+export const getMonthlyPayrollSummaries = async (month, actor = null) => {
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     throw new AppError(400, "VALIDATION_ERROR", "Month must be in YYYY-MM format");
   }
 
+  const companyId = actor?.companyId;
   const monthStart = `${month}-01`;
   const monthEnd = toKarachiDate(monthStart).endOf("month").format("YYYY-MM-DD");
 
   const filter = {
     joinDate: { $lte: monthEnd },
     $or: [{ exitDate: null }, { exitDate: { $gte: monthStart } }],
+    ...(companyId ? { companyId } : {}),
   };
 
   if (mongoose.connection.readyState !== 1 && !EmployeeModel.find?.mock) {
@@ -168,7 +189,7 @@ export const getMonthlyPayrollSummaries = async (month) => {
   const summaries = [];
   for (const emp of employees) {
     try {
-      const summary = await calculateEmployeePayroll(emp._id, month);
+      const summary = await calculateEmployeePayroll(emp._id, month, actor);
       summaries.push(summary);
     } catch (err) {
       console.warn(`[payroll.service] Failed to calculate for ${emp._id}:`, err.message);

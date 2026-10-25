@@ -35,8 +35,8 @@ router.get(
   "/departments",
   requireAuth,
   requireRole("admin", "hr"),
-  asyncHandler(async (_req, res) => {
-    const departments = await orgService.getDepartments();
+  asyncHandler(async (req, res) => {
+    const departments = await orgService.getDepartments(req.user.companyId);
     return res.status(200).json({ data: departments });
   }),
 );
@@ -46,7 +46,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const department = await orgService.getDepartmentById(req.params.id);
+    const department = await orgService.getDepartmentById(req.params.id, req.user);
     return res.status(200).json({ data: department });
   }),
 );
@@ -94,7 +94,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const designations = await orgService.getDesignations(req.query);
+    const designations = await orgService.getDesignations(req.query, req.user);
     return res.status(200).json({ data: designations });
   }),
 );
@@ -104,7 +104,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const designation = await orgService.getDesignationById(req.params.id);
+    const designation = await orgService.getDesignationById(req.params.id, req.user);
     return res.status(200).json({ data: designation });
   }),
 );

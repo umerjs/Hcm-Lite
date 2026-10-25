@@ -50,7 +50,8 @@ export const NotFound: React.FC = () => {
             Page Not Found
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-            The page you requested could not be located on the HCM Lite server. It may have been moved, renamed, or never existed.
+            The page you requested could not be located on the HCM Lite server. It may have been
+            moved, renamed, or never existed.
           </p>
 
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border text-xs font-mono text-muted-foreground">

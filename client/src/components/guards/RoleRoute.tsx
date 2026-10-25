@@ -11,19 +11,14 @@ interface RoleRouteProps {
 }
 
 export const RoleRoute: React.FC<RoleRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, isLoading, role, mustChangePassword, isSetup } = useAuth();
+  const { isAuthenticated, isLoading, role, mustChangePassword } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
     return <Loading fullScreen text="Checking session..." />;
   }
 
-  // 1. If system needs first-run setup
-  if (isSetup === false && location.pathname !== "/setup") {
-    return <Navigate to="/setup" replace />;
-  }
-
-  // 2. If not logged in
+  // 1. If not logged in
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

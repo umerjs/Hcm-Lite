@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSetup, setIsSetup] = useState<boolean | null>(null);
+  const [isSetup, setIsSetup] = useState<boolean | null>(true);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -43,18 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkSetupStatus = useCallback(async (): Promise<boolean> => {
-    try {
-      const res = await http.get<SetupStatusResponse | { isSetup?: boolean; needsSetup?: boolean }>(
-        "/setup/status",
-      );
-      const done = res.data.isSetup === true || (res.data as any).needsSetup === false;
-      setIsSetup(done);
-      return done;
-    } catch {
-      // If check fails or setup is unavailable, assume setup might be done or fallback to true to prevent blocking
-      setIsSetup(true);
-      return true;
-    }
+    // In multi-tenant SaaS, setup is never blocked
+    setIsSetup(true);
+    return true;
   }, []);
 
   const refetchUser = useCallback(async () => {
@@ -89,14 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const bootstrap = async () => {
       setIsLoading(true);
       try {
-        // 1. Check setup status first
-        const setupDone = await checkSetupStatus();
-        if (!setupDone) {
-          if (isMounted) setIsLoading(false);
-          return;
-        }
-
-        // 2. If token exists, verify & fetch user profile
+        // Multi-tenant: No setup lock check during boot
+        // If token exists, verify & fetch user profile
         const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
         if (storedToken) {
           try {

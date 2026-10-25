@@ -19,6 +19,7 @@ import * as leavetypeService from "../services/leavetype.service.mjs";
 process.env.JWT_SECRET = process.env.JWT_SECRET || "hcm_lite_test_secret_32_characters_long";
 
 describe("Slice A2: Organization & User Management API", () => {
+  const mockCompanyId = "671a11112222333344449999";
   const adminId = "671a11112222333344440001";
   const hrId = "671a11112222333344440002";
   const employeeUserId = "671a11112222333344440003";
@@ -33,17 +34,21 @@ describe("Slice A2: Organization & User Management API", () => {
     vi.restoreAllMocks();
 
     adminToken = jwt.sign(
-      { _id: adminId, role: "admin", email: "admin@company.com" },
+      { _id: adminId, role: "admin", email: "admin@company.com", companyId: mockCompanyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign({ _id: hrId, role: "hr", email: "hr@company.com" }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    hrToken = jwt.sign(
+      { _id: hrId, role: "hr", email: "hr@company.com", companyId: mockCompanyId },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
 
     employeeToken = jwt.sign(
-      { _id: employeeUserId, role: "employee", email: "emp@company.com" },
+      { _id: employeeUserId, role: "employee", email: "emp@company.com", companyId: mockCompanyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -71,13 +76,14 @@ describe("Slice A2: Organization & User Management API", () => {
 
       const mockDoc = {
         _id: id,
+        companyId: mockCompanyId,
         email,
         role,
         employeeId: empId,
         isActive: true,
         mustChangePassword: false,
         save: vi.fn().mockResolvedValue(true),
-        toObject: () => ({ _id: id, email, role, isActive: true, mustChangePassword: false }),
+        toObject: () => ({ _id: id, companyId: mockCompanyId, email, role, isActive: true, mustChangePassword: false }),
       };
 
       return {
@@ -681,11 +687,12 @@ describe("Slice A2: Organization & User Management API", () => {
 
       const mockTarget = {
         _id: targetUserId,
+        companyId: mockCompanyId,
         email: "target@company.com",
         role: "employee",
         isActive: true,
         save: vi.fn().mockResolvedValue(true),
-        toObject: () => ({ _id: targetUserId, isActive: false }),
+        toObject: () => ({ _id: targetUserId, companyId: mockCompanyId, isActive: false }),
       };
 
       vi.spyOn(UserModel, "findById").mockImplementation((id) => {
@@ -694,6 +701,7 @@ describe("Slice A2: Organization & User Management API", () => {
           return {
             select: vi.fn().mockResolvedValue({
               _id: adminId,
+              companyId: mockCompanyId,
               email: "admin@company.com",
               role: "admin",
               isActive: true,
@@ -750,6 +758,7 @@ describe("Slice A2: Organization & User Management API", () => {
 
       const mockTarget = {
         _id: targetUserId,
+        companyId: mockCompanyId,
         email: "target@company.com",
         role: "employee",
         password: "oldHashedPassword",
@@ -763,6 +772,7 @@ describe("Slice A2: Organization & User Management API", () => {
           return {
             select: vi.fn().mockResolvedValue({
               _id: adminId,
+              companyId: mockCompanyId,
               email: "admin@company.com",
               role: "admin",
               isActive: true,
@@ -802,6 +812,7 @@ describe("Slice A2: Organization & User Management API", () => {
       vi.spyOn(UserModel, "findOne").mockReturnValue({
         select: vi.fn().mockResolvedValue({
           _id: targetUserId,
+          companyId: mockCompanyId,
           email: "reset_user@company.com",
           password: hashedTempPassword,
           role: "employee",

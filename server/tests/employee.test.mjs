@@ -15,6 +15,7 @@ import * as auditService from "../services/audit.service.mjs";
 process.env.JWT_SECRET = process.env.JWT_SECRET || "hcm_lite_test_secret_32_characters_long";
 
 describe("Slice A3: Employee Management API", () => {
+  const companyId = "671a11112222333344449999";
   const adminId = "671a11112222333344440001";
   const hrId = "671a11112222333344440002";
   const employeeUserId = "671a11112222333344440003";
@@ -31,17 +32,19 @@ describe("Slice A3: Employee Management API", () => {
     vi.restoreAllMocks();
 
     adminToken = jwt.sign(
-      { _id: adminId, role: "admin", email: "admin@company.com" },
+      { _id: adminId, role: "admin", email: "admin@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign({ _id: hrId, role: "hr", email: "hr@company.com" }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    hrToken = jwt.sign(
+      { _id: hrId, role: "hr", email: "hr@company.com", companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
 
     employeeToken = jwt.sign(
-      { _id: employeeUserId, role: "employee", email: "emp@company.com" },
+      { _id: employeeUserId, role: "employee", email: "emp@company.com", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
@@ -65,13 +68,14 @@ describe("Slice A3: Employee Management API", () => {
 
       const mockDoc = {
         _id: id,
+        companyId,
         email,
         role,
         employeeId: empId,
         isActive: true,
         mustChangePassword: false,
         save: vi.fn().mockResolvedValue(true),
-        toObject: () => ({ _id: id, email, role, isActive: true, mustChangePassword: false }),
+        toObject: () => ({ _id: id, companyId, email, role, isActive: true, mustChangePassword: false }),
       };
 
       return {

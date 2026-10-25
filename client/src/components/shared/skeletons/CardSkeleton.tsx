@@ -29,7 +29,9 @@ export const StatCardSkeleton: React.FC<StatCardSkeletonProps> = ({ count = 4 })
 
 export const CardSkeleton: React.FC<{ className?: string }> = ({ className = "" }) => {
   return (
-    <div className={`p-6 rounded-2xl border border-border bg-card shadow-xs space-y-4 ${className}`}>
+    <div
+      className={`p-6 rounded-2xl border border-border bg-card shadow-xs space-y-4 ${className}`}
+    >
       <div className="flex items-center justify-between">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-4 w-20" />

@@ -73,7 +73,7 @@ export const aiTools = [
  * executing any invoked tools (leave balance or leave application),
  * and logging the prompt/response to AILogModel.
  */
-export const processChat = async ({ userId, role, employeeId, message }) => {
+export const processChat = async ({ companyId = null, userId, role, employeeId, message }) => {
   if (!message || typeof message !== "string" || !message.trim()) {
     throw new AppError(400, "VALIDATION_ERROR", "Field 'message' is required");
   }
@@ -132,7 +132,7 @@ Provide concise and helpful responses.`,
         }
 
         let toolResult;
-        const userObj = { _id: userId, id: userId, role, employeeId };
+        const userObj = { _id: userId, id: userId, role, employeeId, companyId };
 
         try {
           if (toolName === "check_my_leave_balance") {
@@ -206,6 +206,7 @@ Provide concise and helpful responses.`,
   }
 
   const aiLog = await AILogModel.create({
+    ...(companyId ? { companyId } : {}),
     userId: userId || null,
     prompt: promptText,
     response: finalResponse,

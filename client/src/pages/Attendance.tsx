@@ -2,13 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Clock3, LogIn, LogOut, Users } from "lucide-react";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
   Table,
   TableBody,
@@ -24,7 +18,9 @@ import { http } from "../api/http";
 import type { AttendanceBoardItem, AttendanceSummaryItem, Department } from "../types/api";
 
 const unwrap = <T,>(value: T | { data: T }): T =>
-  (typeof value === "object" && value !== null && "data" in value ? (value as any).data : value) as T;
+  (typeof value === "object" && value !== null && "data" in value
+    ? (value as any).data
+    : value) as T;
 
 const formatTime = (value?: string | null) =>
   value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
@@ -48,14 +44,15 @@ export default function Attendance() {
 
   const departmentsQuery = useQuery({
     queryKey: ["departments"],
-    queryFn: async () =>
-      unwrap<Department[]>((await http.get<Department[]>("/departments")).data),
+    queryFn: async () => unwrap<Department[]>((await http.get<Department[]>("/departments")).data),
   });
 
   const summaryQuery = useQuery({
     queryKey: ["attendance", "summary"],
     queryFn: async () =>
-      unwrap<AttendanceSummaryItem[]>((await http.get<AttendanceSummaryItem[]>("/attendance/my")).data),
+      unwrap<AttendanceSummaryItem[]>(
+        (await http.get<AttendanceSummaryItem[]>("/attendance/my")).data,
+      ),
   });
 
   const boardQuery = useQuery({

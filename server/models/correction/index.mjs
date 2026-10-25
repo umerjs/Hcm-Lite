@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const CorrectionSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "employees",
@@ -44,8 +49,8 @@ const CorrectionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Index on { employeeId, status } as specified in PRD Section 7
-CorrectionSchema.index({ employeeId: 1, status: 1 });
+// Index on { companyId, employeeId, status } as specified in PRD Section 7
+CorrectionSchema.index({ companyId: 1, employeeId: 1, status: 1 });
 
 export const CorrectionModel =
   mongoose.models.corrections || mongoose.model("corrections", CorrectionSchema);

@@ -53,18 +53,10 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
               {Array.from({ length: columns }).map((_, cIndex) => {
                 // Vary widths for realistic look
                 const widthClass =
-                  cIndex === 0
-                    ? "w-32"
-                    : cIndex === 1
-                    ? "w-40"
-                    : cIndex === 2
-                    ? "w-24"
-                    : "w-20";
+                  cIndex === 0 ? "w-32" : cIndex === 1 ? "w-40" : cIndex === 2 ? "w-24" : "w-20";
                 return (
                   <div key={`cell-${rIndex}-${cIndex}`} className="flex items-center gap-3">
-                    {cIndex === 0 && (
-                      <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                    )}
+                    {cIndex === 0 && <Skeleton className="w-8 h-8 rounded-full shrink-0" />}
                     <Skeleton className={`h-4 ${widthClass}`} />
                   </div>
                 );

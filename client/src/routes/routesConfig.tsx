@@ -17,7 +17,8 @@ import {
 
 // Lazy-loaded page components for optimal load performance and code-splitting
 export const DashboardPage = lazy(() => import("../pages/Dashboard"));
-export const SetupPage = lazy(() => import("../pages/Setup"));
+export const RegisterPage = lazy(() => import("../pages/Register"));
+export const SetupPage = RegisterPage;
 export const LoginPage = lazy(() => import("../pages/Login"));
 export const ChangePasswordPage = lazy(() => import("../pages/ChangePassword"));
 export const OrganizationPage = lazy(() => import("../pages/Organization"));
@@ -33,17 +34,17 @@ export const UnauthorizedPage = lazy(() => import("../pages/Unauthorized"));
 export const CommsModule = lazy(() =>
   import("../pages/CommsPages").then((m) => ({
     default: m.AnnouncementsPage,
-  }))
+  })),
 );
 export const AuditModule = lazy(() =>
   import("../pages/CommsPages").then((m) => ({
     default: m.AuditPage,
-  }))
+  })),
 );
 export const NotificationsModule = lazy(() =>
   import("../pages/CommsPages").then((m) => ({
     default: m.NotificationsPage,
-  }))
+  })),
 );
 
 export interface AppRouteItem {

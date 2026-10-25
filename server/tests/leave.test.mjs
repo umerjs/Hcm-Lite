@@ -13,6 +13,7 @@ import * as auditService from "../services/audit.service.mjs";
 process.env.JWT_SECRET = process.env.JWT_SECRET || "hcm_lite_test_secret_32_characters_long";
 
 describe("Slice B2: Leave & Corrections API", () => {
+  const companyId = "671a11112222333344449999";
   const employeeUserId = "671a11112222333344445555";
   const employeeId = "671b11112222333344445555";
 
@@ -28,17 +29,23 @@ describe("Slice B2: Leave & Corrections API", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
 
-    employeeToken = jwt.sign({ _id: employeeUserId, role: "employee" }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    otherEmployeeToken = jwt.sign(
-      { _id: otherEmployeeUserId, role: "employee" },
+    employeeToken = jwt.sign(
+      { _id: employeeUserId, role: "employee", companyId },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign({ _id: hrUserId, role: "hr" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    otherEmployeeToken = jwt.sign(
+      { _id: otherEmployeeUserId, role: "employee", companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    hrToken = jwt.sign(
+      { _id: hrUserId, role: "hr", companyId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
 
     // Mock UserModel.findById().select() for auth middleware
     vi.spyOn(UserModel, "findById").mockImplementation((id) => {
@@ -57,6 +64,7 @@ describe("Slice B2: Leave & Corrections API", () => {
       return {
         select: vi.fn().mockResolvedValue({
           _id: id,
+          companyId,
           email: `${role}@company.com`,
           role,
           employeeId: empId,

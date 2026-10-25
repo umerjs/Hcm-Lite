@@ -32,8 +32,8 @@ router.get(
   "/leave-types",
   requireAuth,
   requireRole("admin", "hr", "employee"),
-  asyncHandler(async (_req, res) => {
-    const leaveTypes = await leavetypeService.getAllLeaveTypes();
+  asyncHandler(async (req, res) => {
+    const leaveTypes = await leavetypeService.getAllLeaveTypes(req.user.companyId);
     return res.status(200).json({ data: leaveTypes });
   }),
 );

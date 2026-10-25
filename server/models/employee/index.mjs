@@ -11,11 +11,12 @@ const CounterSchema = new mongoose.Schema(
 export const CounterModel = mongoose.models.counters || mongoose.model("counters", CounterSchema);
 
 let inMemorySeq = 0;
-export const getNextEmployeeCode = async () => {
+export const getNextEmployeeCode = async (companyId = null) => {
+  const counterId = companyId ? `employeeCode_${companyId}` : "employeeCode";
   if (mongoose.connection.readyState === 1 || CounterModel.findOneAndUpdate?.mock) {
     try {
       const counter = await CounterModel.findOneAndUpdate(
-        { _id: "employeeCode" },
+        { _id: counterId },
         { $inc: { seq: 1 } },
         { new: true, upsert: true },
       );
@@ -33,9 +34,13 @@ export const getNextEmployeeCode = async () => {
 
 const EmployeeSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     code: {
       type: String,
-      unique: true,
       trim: true,
       required: true,
     },
@@ -47,7 +52,6 @@ const EmployeeSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
     },
@@ -102,6 +106,12 @@ const EmployeeSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Compound unique indexes per company
+EmployeeSchema.index({ companyId: 1, code: 1 }, { unique: true });
+EmployeeSchema.index({ companyId: 1, email: 1 }, { unique: true });
+EmployeeSchema.index({ companyId: 1, status: 1 });
+EmployeeSchema.index({ companyId: 1, departmentId: 1 });
 
 export const EmployeeModel =
   mongoose.models.employees || mongoose.model("employees", EmployeeSchema);

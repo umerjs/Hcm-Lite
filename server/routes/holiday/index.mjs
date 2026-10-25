@@ -38,7 +38,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const holidays = await holidayService.getHolidays(req.query);
+    const holidays = await holidayService.getHolidays(req.query, req.user);
     return res.status(200).json({ data: holidays });
   }),
 );
@@ -48,7 +48,7 @@ router.get(
   requireAuth,
   requireRole("admin", "hr"),
   asyncHandler(async (req, res) => {
-    const holiday = await holidayService.getHolidayById(req.params.id);
+    const holiday = await holidayService.getHolidayById(req.params.id, req.user);
     return res.status(200).json({ data: holiday });
   }),
 );

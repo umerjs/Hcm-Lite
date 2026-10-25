@@ -1,12 +1,29 @@
 import { useState } from "react";
-import { ArrowUpRight, CalendarCheck2, Check, Clock3, FileCheck2, Sparkles, Users, X, Loader2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarCheck2,
+  Check,
+  Clock3,
+  FileCheck2,
+  Sparkles,
+  Users,
+  X,
+  Loader2,
+} from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { http, extractErrorMessage } from "../api/http";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { StatCard, StatusBadge, AiBadge } from "../components/shared";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import type { AiChatResponse, EmployeeDashboardResponse, HrDashboardResponse } from "../types/api";
 
 const unwrap = <T,>(value: T | { data: T }): T =>
@@ -28,12 +45,16 @@ export default function Dashboard() {
 
   const hr = useQuery({
     queryKey: ["analytics", "hr"],
-    queryFn: async () => unwrap<HrDashboardResponse>((await http.get<HrDashboardResponse>("/analytics/hr")).data),
+    queryFn: async () =>
+      unwrap<HrDashboardResponse>((await http.get<HrDashboardResponse>("/analytics/hr")).data),
   });
 
   const me = useQuery({
     queryKey: ["analytics", "me"],
-    queryFn: async () => unwrap<EmployeeDashboardResponse>((await http.get<EmployeeDashboardResponse>("/analytics/me")).data),
+    queryFn: async () =>
+      unwrap<EmployeeDashboardResponse>(
+        (await http.get<EmployeeDashboardResponse>("/analytics/me")).data,
+      ),
   });
 
   const summarize = useMutation({
@@ -71,7 +92,12 @@ export default function Dashboard() {
       <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs sm:text-sm font-medium text-emerald-600">
-            {new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            {new Date().toLocaleDateString(undefined, {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">Good day</h1>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
@@ -84,7 +110,10 @@ export default function Dashboard() {
       </header>
 
       {/* Workforce Metric Cards */}
-      <section aria-label="Workforce overview" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <section
+        aria-label="Workforce overview"
+        className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+      >
         <StatCard
           title="Total employees"
           value={<span className="tabular-nums">{total || "—"}</span>}
@@ -137,7 +166,9 @@ export default function Dashboard() {
               <CardTitle>AI dashboard summary</CardTitle>
               <AiBadge />
             </div>
-            <CardDescription>Generate an automated executive readout of current activity.</CardDescription>
+            <CardDescription>
+              Generate an automated executive readout of current activity.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 flex-1">
             <Button

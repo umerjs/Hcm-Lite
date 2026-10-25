@@ -2,13 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Check, Save, Settings2 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
   Table,
   TableBody,
@@ -23,9 +17,18 @@ import { http } from "../api/http";
 import type { CompanySettings, Department } from "../types/api";
 
 const unwrap = <T,>(value: T | { data: T }): T =>
-  (typeof value === "object" && value !== null && "data" in value ? (value as any).data : value) as T;
+  (typeof value === "object" && value !== null && "data" in value
+    ? (value as any).data
+    : value) as T;
 
-const tabs = ["Company Settings", "Departments", "Designations", "Leave Types", "Holidays", "Users"];
+const tabs = [
+  "Company Settings",
+  "Departments",
+  "Designations",
+  "Leave Types",
+  "Holidays",
+  "Users",
+];
 
 export default function Organization() {
   const [activeTab, setActiveTab] = useState("Company Settings");
@@ -34,13 +37,19 @@ export default function Organization() {
   const settingsQuery = useQuery({
     queryKey: ["company-settings"],
     queryFn: async () =>
-      unwrap<CompanySettings>(await http.get<CompanySettings | { data: CompanySettings }>("/settings").then((r) => r.data)),
+      unwrap<CompanySettings>(
+        await http
+          .get<CompanySettings | { data: CompanySettings }>("/settings")
+          .then((r) => r.data),
+      ),
   });
 
   const departmentsQuery = useQuery({
     queryKey: ["departments"],
     queryFn: async () =>
-      unwrap<Department[]>(await http.get<Department[] | { data: Department[] }>("/departments").then((r) => r.data)),
+      unwrap<Department[]>(
+        await http.get<Department[] | { data: Department[] }>("/departments").then((r) => r.data),
+      ),
   });
 
   const settings = settingsQuery.data;
@@ -187,7 +196,9 @@ export default function Organization() {
                             <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
                               <Building2 className="size-4" />
                             </div>
-                            <span className="font-medium text-xs sm:text-sm">{department.name}</span>
+                            <span className="font-medium text-xs sm:text-sm">
+                              {department.name}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">

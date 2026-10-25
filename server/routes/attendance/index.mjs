@@ -100,7 +100,7 @@ router.get(
   validateQuery(boardQuerySchema),
   asyncHandler(async (req, res) => {
     const { date, departmentId } = req.validatedQuery;
-    const board = await attendanceService.getBoard(date, departmentId);
+    const board = await attendanceService.getBoard(date, departmentId, req.user);
     return res.status(200).json({ data: board });
   }),
 );
@@ -117,7 +117,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { month } = req.validatedQuery;
-    const data = await attendanceService.getEmployeeMonth(id, month);
+    const data = await attendanceService.getEmployeeMonth(id, month, null, req.user);
     return res.status(200).json({ data });
   }),
 );

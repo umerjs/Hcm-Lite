@@ -2,11 +2,15 @@ import mongoose from "mongoose";
 
 const LeaveTypeSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
     key: {
       type: String,
       enum: ["annual", "sick", "casual", "unpaid"],
       required: true,
-      unique: true,
       trim: true,
     },
     name: {
@@ -25,6 +29,8 @@ const LeaveTypeSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+LeaveTypeSchema.index({ companyId: 1, key: 1 }, { unique: true });
 
 export const LeaveTypeModel =
   mongoose.models.leavetypes || mongoose.model("leavetypes", LeaveTypeSchema);

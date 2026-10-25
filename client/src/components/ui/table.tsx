@@ -20,7 +20,13 @@ const TableRow = ({ className, ...props }: React.ComponentProps<"tr">) => (
 );
 
 const TableHead = ({ className, ...props }: React.ComponentProps<"th">) => (
-  <th className={cn("h-10 px-4 text-left align-middle text-xs font-medium text-muted-foreground whitespace-nowrap", className)} {...props} />
+  <th
+    className={cn(
+      "h-10 px-4 text-left align-middle text-xs font-medium text-muted-foreground whitespace-nowrap",
+      className,
+    )}
+    {...props}
+  />
 );
 
 const TableCell = ({ className, ...props }: React.ComponentProps<"td">) => (

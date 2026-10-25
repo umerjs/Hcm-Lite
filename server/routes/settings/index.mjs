@@ -77,8 +77,8 @@ router.get(
   "/settings",
   requireAuth,
   requireRole("admin", "hr"),
-  asyncHandler(async (_req, res) => {
-    const settings = await settingsService.getSettings();
+  asyncHandler(async (req, res) => {
+    const settings = await settingsService.getSettings(req.user?.companyId);
     return res.status(200).json({ settings, data: settings });
   }),
 );

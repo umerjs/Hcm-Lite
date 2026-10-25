@@ -40,7 +40,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
     text: "text-amber-800 dark:text-amber-300 border-amber-500/30 dark:border-amber-500/40",
     label: "Half Day",
   },
-  
+
   missing_checkout: {
     bg: "bg-orange-500/10 dark:bg-orange-500/15",
     text: "text-orange-800 dark:text-orange-300 border-orange-500/30 dark:border-orange-500/40",
