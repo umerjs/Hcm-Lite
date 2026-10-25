@@ -52,4 +52,28 @@ router.post(
   }),
 );
 
+/**
+ * POST /setup/reset
+ * Resets database to empty first-run state so /setup can be tested afresh.
+ */
+router.post(
+  "/setup/reset",
+  asyncHandler(async (_req, res) => {
+    const result = await setupService.resetDatabase();
+    return res.status(200).json(result);
+  }),
+);
+
+/**
+ * POST /setup/seed
+ * Populates database with the standard Saylani Hackathon enterprise demo dataset.
+ */
+router.post(
+  "/setup/seed",
+  asyncHandler(async (_req, res) => {
+    const result = await setupService.seedDatabase();
+    return res.status(200).json(result);
+  }),
+);
+
 export default router;
