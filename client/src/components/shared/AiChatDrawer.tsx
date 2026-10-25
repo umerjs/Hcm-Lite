@@ -30,9 +30,9 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 const SUGGESTED_PROMPTS = [
+  "Who is on leave today?",
+  "Calculate payroll cost",
   "How many leaves do I have left?",
-  "What are our official working hours?",
-  "How does the late penalty policy work?",
 ];
 
 export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) => {
