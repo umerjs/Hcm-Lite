@@ -75,7 +75,14 @@ describe("Slice A3: Employee Management API", () => {
         isActive: true,
         mustChangePassword: false,
         save: vi.fn().mockResolvedValue(true),
-        toObject: () => ({ _id: id, companyId, email, role, isActive: true, mustChangePassword: false }),
+        toObject: () => ({
+          _id: id,
+          companyId,
+          email,
+          role,
+          isActive: true,
+          mustChangePassword: false,
+        }),
       };
 
       return {

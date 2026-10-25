@@ -41,11 +41,9 @@ describe("Slice B2: Leave & Corrections API", () => {
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign(
-      { _id: hrUserId, role: "hr", companyId },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" },
-    );
+    hrToken = jwt.sign({ _id: hrUserId, role: "hr", companyId }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     // Mock UserModel.findById().select() for auth middleware
     vi.spyOn(UserModel, "findById").mockImplementation((id) => {

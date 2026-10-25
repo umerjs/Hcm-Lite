@@ -24,8 +24,7 @@ export const createNotification = async ({
     throw new AppError(400, "VALIDATION_ERROR", "User ID and notification text are required");
   }
 
-  const resolvedCompanyId =
-    companyId || (userId?.companyId ? userId.companyId : null);
+  const resolvedCompanyId = companyId || (userId?.companyId ? userId.companyId : null);
 
   if (mongoose.connection.readyState !== 1 && !NotificationModel.create?.mock) {
     console.log(
@@ -163,10 +162,7 @@ export const getAnnouncements = async (user = null) => {
 /**
  * Retrieves notifications for a specific user.
  */
-export const getNotifications = async (
-  userId,
-  { unreadOnly = false, companyId = null } = {},
-) => {
+export const getNotifications = async (userId, { unreadOnly = false, companyId = null } = {}) => {
   const filter = { userId };
   if (companyId) filter.companyId = companyId;
   if (unreadOnly) {

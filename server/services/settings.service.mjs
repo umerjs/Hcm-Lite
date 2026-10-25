@@ -46,7 +46,10 @@ export const getSettings = async (companyIdOrActor = null) => {
     ) {
       try {
         let doc = null;
-        if (SettingsModel.findOne?.mock || (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)) {
+        if (
+          SettingsModel.findOne?.mock ||
+          (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)
+        ) {
           doc = await SettingsModel.findOne(query);
         }
         if (!doc && (SettingsModel.findById?.mock || mongoose.connection.readyState === 1)) {
@@ -111,7 +114,10 @@ export const updateSettings = async (user, updates) => {
     SettingsModel.findById?.mock ||
     SettingsModel.findOne?.mock
   ) {
-    if (SettingsModel.findOne?.mock || (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)) {
+    if (
+      SettingsModel.findOne?.mock ||
+      (mongoose.connection.readyState === 1 && !SettingsModel.findById?.mock)
+    ) {
       settings = await SettingsModel.findOne(query);
     }
     if (!settings && (SettingsModel.findById?.mock || mongoose.connection.readyState === 1)) {

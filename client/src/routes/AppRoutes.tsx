@@ -11,7 +11,6 @@ import Loading from "../components/shared/Loading";
 import {
   DashboardPage,
   RegisterPage,
-  SetupPage,
   LoginPage,
   ChangePasswordPage,
   OrganizationPage,

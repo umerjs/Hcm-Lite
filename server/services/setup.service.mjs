@@ -193,7 +193,10 @@ export const performSetup = async ({
     };
   } catch (err) {
     // Rollback: If any later step fails, delete everything this call created so needsSetup stays true!
-    if (createdCompanyId && (mongoose.connection.readyState === 1 || CompanyModel.deleteOne?.mock)) {
+    if (
+      createdCompanyId &&
+      (mongoose.connection.readyState === 1 || CompanyModel.deleteOne?.mock)
+    ) {
       await CompanyModel.deleteOne({ _id: createdCompanyId }).catch(() => {});
     }
     if (createdAdminId && (mongoose.connection.readyState === 1 || UserModel.deleteOne?.mock)) {

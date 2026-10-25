@@ -83,7 +83,14 @@ describe("Slice A2: Organization & User Management API", () => {
         isActive: true,
         mustChangePassword: false,
         save: vi.fn().mockResolvedValue(true),
-        toObject: () => ({ _id: id, companyId: mockCompanyId, email, role, isActive: true, mustChangePassword: false }),
+        toObject: () => ({
+          _id: id,
+          companyId: mockCompanyId,
+          email,
+          role,
+          isActive: true,
+          mustChangePassword: false,
+        }),
       };
 
       return {

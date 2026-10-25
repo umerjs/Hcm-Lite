@@ -27,11 +27,9 @@ describe("Slice B1: Attendance API & Service", () => {
       { expiresIn: "1h" },
     );
 
-    hrToken = jwt.sign(
-      { _id: hrUserId, role: "hr", companyId },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" },
-    );
+    hrToken = jwt.sign({ _id: hrUserId, role: "hr", companyId }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     noProfileToken = jwt.sign(
       { _id: userNoEmployeeId, role: "employee", companyId },
