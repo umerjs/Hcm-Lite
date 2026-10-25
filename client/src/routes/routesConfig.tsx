@@ -46,6 +46,11 @@ export const NotificationsModule = lazy(() =>
     default: m.NotificationsPage,
   })),
 );
+export const ProfilePage = lazy(() =>
+  import("../pages/CommsPages").then((m) => ({
+    default: m.ProfilePage,
+  })),
+);
 
 export interface AppRouteItem {
   path: string;
